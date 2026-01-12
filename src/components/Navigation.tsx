@@ -10,6 +10,7 @@ export default function Navigation() {
   const pathname = usePathname()
   const [role, setRole] = useState<string | null>(null)
   const supabase = createClient()
+  if (pathname === '/login') return null;
 
   useEffect(() => {
     const fetchUserRole = async () => {
