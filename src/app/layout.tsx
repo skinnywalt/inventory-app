@@ -23,6 +23,7 @@ export default function RootLayout({
               </Link>
 
               <nav className="hidden md:flex gap-6 text-sm font-bold text-gray-500">
+                <Link href="/dashboard" className="hover:text-blue-600 transition-colors">Dashboard</Link>
                 <Link href="/inventory" className="hover:text-blue-600 transition-colors">Inventory</Link>
                 <Link href="/sales" className="hover:text-blue-600 transition-colors">Sales Terminal</Link>
               </nav>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import BulkUpload from './bulk-upload' 
+import ManualAdd from './manual-add'
 
 export default function InventoryPage() {
   const [products, setProducts] = useState<any[]>([])
@@ -35,9 +36,11 @@ export default function InventoryPage() {
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto bg-white min-h-screen">
-      <div className="flex justify-between items-center mb-10 border-b pb-6">
+      <div className="flex items-center gap-3">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Inventory Control</h1>
+        <ManualAdd onComplete={loadInventory} />
         <BulkUpload onComplete={loadInventory} />
+        
       </div>
 
       <div className="mb-6">

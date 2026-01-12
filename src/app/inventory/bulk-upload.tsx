@@ -1,51 +1,54 @@
 'use client'
 
 import { useState } from 'react'
-import Papa from 'papaparse'
 import { createClient } from '@/utils/supabase/client'
+import Papa from 'papaparse'
 
-export default function BulkUpload({ orgId }: { orgId: string }) {
+export default function BulkUpload({ onComplete }: { onComplete: () => void }) {
   const [uploading, setUploading] = useState(false)
   const supabase = createClient()
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !localStorage.getItem('selected_org_id')) return
 
     setUploading(true)
+    const orgId = localStorage.getItem('selected_org_id')
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        const formattedData = results.data.map((row: any) => ({
-          name: row.name || row.Name,
-          sku: row.sku || row.SKU || '',
-          quantity: parseInt(row.quantity || row.Quantity) || 0,
-          min_price: parseFloat(row.min_price || row.MinPrice) || 0,
-          organization_id: orgId
-        }))
+        const formattedData = (results.data as any[]).map(row => {
+          const price = parseFloat(row.min_price || row.MinPrice || 0)
+          return {
+            name: row.name || row.Name || 'Unnamed Product',
+            sku: row.sku || row.SKU || 'NOSKU-' + Date.now(),
+            quantity: parseInt(row.quantity || row.Quantity || 0),
+            min_price: price,
+            current_price: price,
+            organization_id: orgId 
+          }
+        })
 
-        const { error } = await supabase.from('products').insert(formattedData)
-        if (error) alert("Error: " + error.message)
+        // Use the RPC function we just created in SQL
+        const { error } = await supabase.rpc('upsert_inventory', { items: formattedData })
+
+        if (error) alert(`Upload failed: ${error.message}`)
         else {
-          alert(`Success! Imported ${formattedData.length} products.`)
-          window.location.reload()
+          alert(`Processed ${formattedData.length} items. Existing SKUs were updated.`)
+          onComplete()
         }
         setUploading(false)
+        e.target.value = ''
       }
     })
   }
 
   return (
-    <div className="mb-8 p-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl text-white shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
-      <div>
-        <h2 className="text-xl font-bold">Quick Bulk Import</h2>
-        <p className="text-blue-100 text-sm">Upload a CSV to update your 3,000+ items instantly.</p>
-      </div>
-      <label className="cursor-pointer bg-white text-blue-600 px-8 py-3 rounded-2xl font-black hover:bg-blue-50 transition-all shadow-md active:scale-95">
-        {uploading ? 'Processing CSV...' : 'CHOOSE CSV FILE'}
-        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-      </label>
-    </div>
+    <label className="cursor-pointer bg-black text-white px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-gray-800 transition-all border border-black">
+      {uploading ? 'Processing...' : 'Bulk Import'}
+      <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+    </label>
   )
 }
