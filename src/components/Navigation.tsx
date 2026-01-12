@@ -36,7 +36,7 @@ export default function Navigation() {
   }
 
   const navLinks = [
-    { name: 'Dashboard', href: '/dashboard', roles: ['admin', 'supervisor', 'seller'] },
+    { name: 'Dashboard', href: '/dashboard', roles: ['admin'] },
     { name: 'Inventory', href: '/inventory', roles: ['admin', 'supervisor'] },
     { name: 'Clients', href: '/clients', roles: ['admin', 'supervisor'] },
     { name: 'Sales Terminal', href: '/sales', roles: ['admin', 'supervisor', 'seller'] },
