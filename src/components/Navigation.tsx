@@ -1,16 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation' // Added useRouter
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Switchboard from './Switchboard'
 
 export default function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
   const [role, setRole] = useState<string | null>(null)
   const supabase = createClient()
-  if (pathname === '/login') return null;
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -27,12 +27,19 @@ export default function Navigation() {
     fetchUserRole()
   }, [])
 
+  // MOVED: Conditional check must be after hooks
+  if (pathname === '/login') return null;
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
   const navLinks = [
     { name: 'Dashboard', href: '/dashboard', roles: ['admin', 'supervisor', 'seller'] },
     { name: 'Inventory', href: '/inventory', roles: ['admin', 'supervisor'] },
     { name: 'Clients', href: '/clients', roles: ['admin', 'supervisor'] },
     { name: 'Sales Terminal', href: '/sales', roles: ['admin', 'supervisor', 'seller'] },
-    { name: 'Settings', href: '/settings', roles: ['admin'] },
   ]
 
   return (
@@ -62,7 +69,15 @@ export default function Navigation() {
         </div>
       </div>
 
-      <Switchboard />
+      <div className="flex items-center gap-6">
+        <Switchboard />
+        <button 
+          onClick={handleSignOut}
+          className="text-[10px] font-bold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors border-l pl-6 border-gray-200"
+        >
+          Sign Out
+        </button>
+      </div>
     </nav>
   )
 }
