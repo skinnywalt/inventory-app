@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation' // Added useRouter
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Switchboard from './Switchboard'
@@ -10,6 +10,7 @@ export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
   const [role, setRole] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
@@ -23,18 +24,20 @@ export default function Navigation() {
           .single()
         setRole(profile?.role || 'seller')
       }
+      setLoading(false)
     }
     fetchUserRole()
   }, [])
 
-  // MOVED: Conditional check must be after hooks
   if (pathname === '/login') return null;
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+    router.refresh()
     router.push('/login')
   }
 
+  // Links configuration based on your specific requirements
   const navLinks = [
     { name: 'Dashboard', href: '/dashboard', roles: ['admin'] },
     { name: 'Inventory', href: '/inventory', roles: ['admin', 'supervisor'] },
@@ -45,12 +48,15 @@ export default function Navigation() {
   return (
     <nav className="border-b border-gray-200 bg-white px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-40">
       <div className="flex items-center gap-10">
-        <Link href="/dashboard" className="text-sm font-black tracking-tighter uppercase">
-          ISINVSYS <span className="text-blue-600">PRO</span>
-        </Link>
+        <div className="flex items-center gap-2">
+           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+             <span className="text-white font-black text-xs">IS</span>
+           </div>
+           <span className="font-black text-xl tracking-tighter uppercase">InvSys</span>
+        </div>
         
         <div className="flex gap-6">
-          {navLinks.map((link) => {
+          {!loading && navLinks.map((link) => {
             if (role && link.roles.includes(role)) {
               return (
                 <Link

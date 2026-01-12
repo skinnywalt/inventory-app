@@ -2,72 +2,64 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
+  let response = NextResponse.next({ request: { headers: request.headers } })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
+        get(name: string) { return request.cookies.get(name)?.value },
         set(name: string, value: string, options: any) {
-          // Update request and response cookies simultaneously
           request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
+          response = NextResponse.next({ request: { headers: request.headers } })
           response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: any) {
-          // FIX: Pass an empty string for the value when removing
           request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
+          response = NextResponse.next({ request: { headers: request.headers } })
           response.cookies.set({ name, value: '', ...options })
         },
       },
     }
   )
 
-  // This refresh the session if it's expired
   const { data: { user } } = await supabase.auth.getUser()
 
-  // ROUTE PROTECTION
-  const isLoginPage = request.nextUrl.pathname.startsWith('/login')
-
-  // 1. If no user and not on login page -> Redirect to /login
-  if (!user && !isLoginPage) {
+  // 1. Auth Guard
+  if (!user && !request.nextUrl.pathname.startsWith('/login')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // 2. If user exists and tries to access /login -> Redirect to /dashboard
-  if (user && isLoginPage) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (user) {
+    // Fetch the role from the profiles table
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const role = profile?.role || 'seller'
+    const path = request.nextUrl.pathname
+
+    // 2. Redirect / to the correct starting page
+    if (path === '/') {
+      return NextResponse.redirect(new URL(role === 'seller' ? '/sales' : '/dashboard', request.url))
+    }
+
+    // 3. ROLE PROTECTION (The "Bouncer" logic)
+    if (role === 'seller' && (path.startsWith('/inventory') || path.startsWith('/clients') || path.startsWith('/dashboard'))) {
+      return NextResponse.redirect(new URL('/sales', request.url))
+    }
+    
+    if (role === 'supervisor' && path.startsWith('/dashboard')) {
+       return NextResponse.redirect(new URL('/inventory', request.url))
+    }
   }
 
   return response
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to add other paths to ignore like /api or /public
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
