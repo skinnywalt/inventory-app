@@ -1,5 +1,6 @@
-import { createServerClient, type NextRequest } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
+// 1. Fixed Imports: NextRequest comes from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -8,6 +9,7 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  // 2. Initialize Supabase Client
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -28,14 +30,16 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // 3. Check for User Session
   const { data: { user } } = await supabase.auth.getUser()
 
-  // If there is no user and they aren't on the login page, redirect them to login
+  // 4. PROTECTION LOGIC
+  // If no user and not on login page, go to login
   if (!user && !request.nextUrl.pathname.startsWith('/login')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // If they are logged in and try to go to the login page, send them to dashboard
+  // If user is logged in and tries to go to login, send to dashboard
   if (user && request.nextUrl.pathname.startsWith('/login')) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
@@ -43,6 +47,7 @@ export async function middleware(request: NextRequest) {
   return response
 }
 
+// 5. Matcher: This ensures middleware runs on all pages except static assets
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
