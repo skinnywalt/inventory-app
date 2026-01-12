@@ -1,6 +1,5 @@
 import "./globals.css";
-import Switchboard from "@/components/Switchboard";
-import Link from "next/link";
+import Navigation from '@/components/Navigation';
 
 export default function RootLayout({
   children,
@@ -10,32 +9,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50 text-gray-900 antialiased font-sans">
-        <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md shadow-sm">
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            
-            {/* LEFT SIDE: LOGO & NAV */}
-            <div className="flex items-center gap-10">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-black text-xs">IS</span>
-                </div>
-                <span className="font-black text-xl tracking-tighter uppercase">InvSys</span>
-              </Link>
+        {/* The Navigation component now handles:
+          1. The ISINVSYS Logo
+          2. Role-based links (Dashboard, Inventory, Clients, Sales)
+          3. The Switchboard 'Shout' logic
+        */}
+        <Navigation />
 
-              <nav className="hidden md:flex gap-6 text-sm font-bold text-gray-500">
-                <Link href="/dashboard" className="hover:text-blue-600 transition-colors">Dashboard</Link>
-                <Link href="/inventory" className="hover:text-blue-600 transition-colors">Inventory</Link>
-                <Link href="/sales" className="hover:text-blue-600 transition-colors">Sales Terminal</Link>
-              </nav>
-            </div>
-
-            {/* RIGHT SIDE: SWITCHBOARD */}
-            <Switchboard />
-
-          </div>
-        </header>
-
-        <main className="max-w-7xl mx-auto py-8">
+        <main className="max-w-[1600px] mx-auto py-8 px-6">
           {children}
         </main>
       </body>
