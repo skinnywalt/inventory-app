@@ -26,34 +26,42 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // 1. Auth Guard
+  // 1. If not logged in, force to login (except for login page itself)
   if (!user && !request.nextUrl.pathname.startsWith('/login')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if (user) {
-    // Fetch the role from the profiles table
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    const role = profile?.role || 'seller'
+    const role = profile?.role || 'seller' // Default to safest role
     const path = request.nextUrl.pathname
 
-    // 2. Redirect / to the correct starting page
+    // 2. Prevent infinite redirect loops
+    // If they are on their designated "Home" page, do nothing
+    if (role === 'admin' && path === '/dashboard') return response
+    if (role === 'seller' && path === '/sales') return response
+
+    // 3. Handle the Root "/" Redirect
     if (path === '/') {
-      return NextResponse.redirect(new URL(role === 'seller' ? '/sales' : '/dashboard', request.url))
+      const target = role === 'admin' ? '/dashboard' : '/sales'
+      return NextResponse.redirect(new URL(target, request.url))
     }
 
-    // 3. ROLE PROTECTION (The "Bouncer" logic)
-    if (role === 'seller' && (path.startsWith('/inventory') || path.startsWith('/clients') || path.startsWith('/dashboard'))) {
+    // 4. STRICT BOUNCER LOGIC
+    // Kick Sellers out of Admin/Supervisor zones
+    const adminZones = ['/dashboard', '/inventory', '/clients', '/settings']
+    if (role === 'seller' && adminZones.some(zone => path.startsWith(zone))) {
       return NextResponse.redirect(new URL('/sales', request.url))
     }
-    
+
+    // Kick Supervisors out of Admin zones (Dashboard)
     if (role === 'supervisor' && path.startsWith('/dashboard')) {
-       return NextResponse.redirect(new URL('/inventory', request.url))
+      return NextResponse.redirect(new URL('/inventory', request.url))
     }
   }
 
