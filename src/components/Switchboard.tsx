@@ -8,19 +8,33 @@ export default function Switchboard() {
   const [organizations, setOrganizations] = useState<any[]>([])
   const [selectedOrgId, setSelectedOrgId] = useState<string>('')
   const [role, setRole] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false) // Added to prevent hydration flickering
+  
   const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
+    setMounted(true)
     const loadSwitchboard = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: profile } = await supabase.from('profiles').select('role, organization_id').eq('id', user.id).single()
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role, organization_id')
+        .eq('id', user.id)
+        .single()
+      
+      if (error) console.error("Switchboard profile fetch error:", error)
+      
       const userRole = profile?.role || 'seller'
+      
+      // DEBUG: Look at your browser console (F12 or Cmd+Opt+J) to see this!
+      console.log("Current Auth User ID:", user.id)
+      console.log("Fetched Role from Profiles Table:", userRole)
+      
       setRole(userRole)
 
-      // Fetch Orgs based on role
       let orgData = []
       if (userRole === 'admin') {
         const { data } = await supabase.from('organizations').select('*').order('name')
@@ -31,7 +45,6 @@ export default function Switchboard() {
       }
       setOrganizations(orgData)
 
-      // LOGIC FIX: Handle the selection
       const saved = localStorage.getItem('selected_org_id')
       if (saved && orgData.find(o => o.id === saved)) {
         setSelectedOrgId(saved)
@@ -46,16 +59,26 @@ export default function Switchboard() {
   const handleSwitch = (id: string) => {
     setSelectedOrgId(id)
     localStorage.setItem('selected_org_id', id)
-    // The "Shout" - triggers other pages to reload
     window.dispatchEvent(new Event("storage"))
-    // Refresh the router to update any server-side state
     router.refresh()
   }
 
+  // Prevents the "Axe" error and keeps UI clean until mounted
+  if (!mounted) return null
+
   return (
     <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-200">
-      <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Active Tenant</span>
+      {/* Added htmlFor to link to the select id */}
+      <label 
+        htmlFor="org-switcher" 
+        className="text-[9px] font-black text-gray-400 uppercase tracking-tighter"
+      >
+        Active Tenant
+      </label>
+      
       <select 
+        id="org-switcher" // Match with label htmlFor
+        title="Select Organization" // Added to satisfy Accessibility tools
         value={selectedOrgId}
         onChange={(e) => handleSwitch(e.target.value)}
         disabled={role !== 'admin' && organizations.length <= 1}
