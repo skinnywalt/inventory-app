@@ -46,11 +46,16 @@ export default function Switchboard() {
       setOrganizations(orgData)
 
       const saved = localStorage.getItem('selected_org_id')
-      if (saved && orgData.find(o => o.id === saved)) {
-        setSelectedOrgId(saved)
-      } else if (orgData.length > 0) {
-        setSelectedOrgId(orgData[0].id)
-        localStorage.setItem('selected_org_id', orgData[0].id)
+      if(userRole == 'admin'){
+        if(saved && orgData.some(o => o.id == saved)){
+          setSelectedOrgId(saved)
+        }
+        else if (orgData.length > 0){
+          localStorage.setItem('selected_org_id', orgData[0].id)
+        }
+      } else {
+        const sellerOrgId = profile?.organization_id
+        localStorage.setItem('selected_org_id', sellerOrgId)
       }
     }
     loadSwitchboard()

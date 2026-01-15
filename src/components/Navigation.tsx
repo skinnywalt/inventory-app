@@ -33,7 +33,8 @@ export default function Navigation() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    localStorage.clear() // Clear storage to prevent "ghost" orgs
+    localStorage.removeItem('selected_org_id') 
+    router.refresh()
     router.push('/login')
   }
 
@@ -62,8 +63,12 @@ export default function Navigation() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-[11px] font-bold uppercase tracking-widest transition-colors ${
-                    pathname === link.href ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-black'
+                  className={`text-[11px] font-bold uppercase tracking-widest transition-all ${
+                    pathname === link.href 
+                      ? 'text-blue-600 border-b-2 border-blue-600' 
+                      : role === 'admin' 
+                        ? 'text-gray-500 hover:text-blue-500' // Admins get a blue hover
+                        : 'text-gray-400 hover:text-black'    // Sellers get a black hover
                   } pb-1`}
                 >
                   {link.name}
