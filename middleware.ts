@@ -1,39 +1,90 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/request'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
-  const { data: { session } } = await supabase.auth.getSession()
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  // 1. If not logged in, always send to login
-  if (!session && req.nextUrl.pathname !== '/login') {
-    return NextResponse.redirect(new URL('/login', req.url))
+  // 1. Initialize the Supabase Client (Standard SSR Pattern)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({ name, value, ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value, ...options })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({ name, value: '', ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value: '', ...options })
+        },
+      },
+    }
+  )
+
+  // 2. Get User Session
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const isLoginPage = request.nextUrl.pathname === '/login'
+
+  // 3. Auth Guard: If no user and not on login, go to login
+  if (!user && !isLoginPage) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // 2. Fetch the role from the profiles table
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', session?.user.id)
-    .single()
+  // 4. Role-Based Routing
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
 
-  const role = profile?.role
+    const role = profile?.role
 
-  // 3. SELLER RULES:
-  // If a seller tries to access / or /dashboard or /inventory, bounce them to /sales
-  if (role === 'seller' && (req.nextUrl.pathname === '/' || req.nextUrl.pathname === '/dashboard' || req.nextUrl.pathname === '/inventory')) {
-    return NextResponse.redirect(new URL('/sales', req.url))
+    // SELLER RESTRICTIONS:
+    // If a seller tries to access admin-only pages, bounce them to /sales
+    const adminPaths = ['/', '/dashboard', '/inventory', '/clients', '/settings']
+    if (role === 'seller' && adminPaths.includes(request.nextUrl.pathname)) {
+      return NextResponse.redirect(new URL('/sales', request.url))
+    }
+
+    // LOGIN REDIRECT:
+    // If logged-in user hits /login, send them to their home base
+    if (isLoginPage) {
+      return NextResponse.redirect(new URL(role === 'admin' ? '/' : '/sales', request.url))
+    }
   }
 
-  // 4. ADMIN RULES:
-  // When an admin first logs in (hits the root), send them to the Landing Page (/)
-  // This is handled naturally by Next.js if / is your landing page.
-
-  return res
+  return response
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 }
