@@ -44,7 +44,7 @@ export default function CommandCenter() {
         <div className="col-span-12 lg:col-span-8 space-y-6">
           <div className="bg-white rounded-[24px] p-8 border border-[#E5E7EB] shadow-sm">
             <h1 className="text-4xl font-bold tracking-tight mb-2 text-[#111827]">Menu Principal</h1>
-            <p className="text-[#6B7280] font-medium italic">Sesion Activa: Administrados</p>
+            <p className="text-[#6B7280] font-medium italic">Sesion Activa: Administrador</p>
             
             <div className="mt-8 pt-8 border-t border-[#F3F4F6]">
               <label className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-widest block mb-3">Organizaciones : </label>
