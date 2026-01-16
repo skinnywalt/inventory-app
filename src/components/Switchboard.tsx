@@ -8,7 +8,7 @@ export default function Switchboard() {
   const [organizations, setOrganizations] = useState<any[]>([])
   const [selectedOrgId, setSelectedOrgId] = useState<string>('')
   const [role, setRole] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false) // Added to prevent hydration flickering
+  const [mounted, setMounted] = useState(false)
   
   const supabase = createClient()
   const router = useRouter()
@@ -19,20 +19,13 @@ export default function Switchboard() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: profile, error } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('role, organization_id')
         .eq('id', user.id)
         .single()
-      
-      if (error) console.error("Switchboard profile fetch error:", error)
-      
+
       const userRole = profile?.role || 'seller'
-      
-      // DEBUG: Look at your browser console (F12 or Cmd+Opt+J) to see this!
-      console.log("Current Auth User ID:", user.id)
-      console.log("Fetched Role from Profiles Table:", userRole)
-      
       setRole(userRole)
 
       let orgData = []
@@ -45,45 +38,56 @@ export default function Switchboard() {
       }
       setOrganizations(orgData)
 
+      // --- LOGIC FIX START ---
       const saved = localStorage.getItem('selected_org_id')
-      if(userRole == 'admin'){
-        if(saved && orgData.some(o => o.id == saved)){
-          setSelectedOrgId(saved)
-        }
-        else if (orgData.length > 0){
-          localStorage.setItem('selected_org_id', orgData[0].id)
+      let finalId = ''
+
+      if (userRole === 'admin') {
+        if (saved && orgData.some(o => o.id === saved)) {
+          finalId = saved
+        } else if (orgData.length > 0) {
+          finalId = orgData[0].id
         }
       } else {
-        const sellerOrgId = profile?.organization_id
-        localStorage.setItem('selected_org_id', sellerOrgId)
+        finalId = profile?.organization_id || ''
       }
+
+      if (finalId) {
+        setSelectedOrgId(finalId)
+        localStorage.setItem('selected_org_id', finalId)
+        
+        // Trigger both standard and custom events so pages wake up
+        window.dispatchEvent(new Event("storage"))
+        window.dispatchEvent(new CustomEvent('orgChanged', { detail: finalId }))
+      }
+      // --- LOGIC FIX END ---
     }
     loadSwitchboard()
   }, [])
 
   const handleSwitch = (id: string) => {
+    if (!id) return
     setSelectedOrgId(id)
     localStorage.setItem('selected_org_id', id)
+    
+    // Shout to other tabs and current tab
     window.dispatchEvent(new Event("storage"))
+    window.dispatchEvent(new CustomEvent('orgChanged', { detail: id }))
+    
     router.refresh()
   }
 
-  // Prevents the "Axe" error and keeps UI clean until mounted
   if (!mounted) return null
 
   return (
     <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-200">
-      {/* Added htmlFor to link to the select id */}
-      <label 
-        htmlFor="org-switcher" 
-        className="text-[9px] font-black text-gray-400 uppercase tracking-tighter"
-      >
+      <label htmlFor="org-switcher" className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">
         Active Tenant
       </label>
       
       <select 
-        id="org-switcher" // Match with label htmlFor
-        title="Select Organization" // Added to satisfy Accessibility tools
+        id="org-switcher" 
+        title="Select Organization"
         value={selectedOrgId}
         onChange={(e) => handleSwitch(e.target.value)}
         disabled={role !== 'admin' && organizations.length <= 1}
