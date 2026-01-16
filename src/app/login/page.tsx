@@ -24,7 +24,7 @@ export default function LoginPage() {
       // router.refresh() ensures the server-side components (like the Middleware) 
       // see the new session cookies immediately.
       router.refresh() 
-      router.push('/dashboard') 
+      router.push('/') 
     }
   }
 

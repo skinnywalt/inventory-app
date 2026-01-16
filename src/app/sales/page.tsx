@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import Link from 'next/link' // FIX: Ensure Link is imported
+import Link from 'next/link'
 
 export default function SalesPage() {
   const [products, setProducts] = useState<any[]>([])
@@ -14,13 +14,42 @@ export default function SalesPage() {
   const [selectedClientId, setSelectedClientId] = useState('')
   const [price, setPrice] = useState<number | ''>('')
   const [qty, setQty] = useState(1)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true) // Start true to prevent "No data" flicker
+  const [userRole, setUserRole] = useState<string | null>(null)
+  
   const supabase = createClient()
 
   const loadData = async () => {
-    const orgId = localStorage.getItem('selected_org_id')
-    if (!orgId) return
+    setLoading(true)
+    
+    // 1. Get the authenticated user
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
 
+    // 2. Identify the Org ID (Priority: LocalStorage > Profile Table)
+    let orgId = localStorage.getItem('selected_org_id')
+    
+    // Fetch profile to get role and verify organization
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, organization_id')
+      .eq('id', user.id)
+      .single()
+
+    setUserRole(profile?.role || 'seller')
+
+    // If localStorage is empty (common on first Vercel load), use the profile's org
+    if (!orgId && profile?.organization_id) {
+      orgId = profile.organization_id
+      localStorage.setItem('selected_org_id', orgId)
+    }
+
+    if (!orgId) {
+      setLoading(false)
+      return
+    }
+
+    // 3. Fetch Products and Clients
     const [prodRes, clientRes] = await Promise.all([
       supabase.from('products').select('*').eq('organization_id', orgId).order('name'),
       supabase.from('clients').select('*').eq('organization_id', orgId).order('full_name')
@@ -28,14 +57,22 @@ export default function SalesPage() {
 
     setProducts(prodRes.data || [])
     setClients(clientRes.data || [])
+    setLoading(false)
   }
 
   useEffect(() => {
     loadData()
     window.addEventListener('storage', loadData)
-    return () => window.removeEventListener('storage', loadData)
+    // Listen for our custom event from the Switchboard
+    window.addEventListener('orgChanged', loadData) 
+
+    return () => {
+      window.removeEventListener('storage', loadData)
+      window.removeEventListener('orgChanged', loadData)
+    }
   }, [])
 
+  // ... (Logic for addToCart, removeFromCart, and total stays the same)
   const selectedProduct = products.find(p => p.id === selectedId)
 
   const addToCart = () => {
@@ -71,12 +108,7 @@ export default function SalesPage() {
   const total = cart.reduce((s, i) => s + (i.salePrice * i.saleQty), 0)
 
   const handleCompleteTransaction = async () => {
-    if (cart.length === 0) return
-    if (!selectedClientId) {
-      alert("Please select a client for this shipment.")
-      return
-    }
-
+    if (cart.length === 0 || !selectedClientId) return
     setLoading(true)
     const orgId = localStorage.getItem('selected_org_id')
 
@@ -142,17 +174,18 @@ export default function SalesPage() {
       {/* ENTRY SECTION */}
       <div className="flex-1 p-10 bg-white border-r border-gray-200 overflow-y-auto">
         
-        {/* --- BACK BUTTON PLACEMENT --- */}
-        <div className="mb-6">
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span> 
-            Back to Command Center
-          </Link>
-        </div>
-        {/* ---------------------------- */}
+        {/* Only Admin sees the "Back to Home" because Sellers shouldn't go to Landing Page */}
+        {userRole === 'admin' && (
+          <div className="mb-6">
+            <Link 
+              href="/" 
+              className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
+            >
+              <span className="group-hover:-translate-x-1 transition-transform">←</span> 
+              Back to Command Center
+            </Link>
+          </div>
+        )}
 
         <h2 className="text-xl font-bold mb-10 uppercase tracking-widest text-gray-900 border-b pb-4">Shipment Preparation</h2>
         
@@ -218,7 +251,9 @@ export default function SalesPage() {
         <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8 border-b border-gray-300 pb-2">Active Shipment Items</h2>
         
         <div className="flex-1 overflow-y-auto space-y-3">
-          {cart.length === 0 ? (
+          {loading ? (
+             <p className="text-gray-400 text-sm animate-pulse text-center py-20 uppercase font-black">Syncing Systems...</p>
+          ) : cart.length === 0 ? (
             <p className="text-gray-400 text-sm italic text-center py-20">No items added to current loadout</p>
           ) : (
             cart.map(item => (
