@@ -49,10 +49,10 @@ export default function Navigation() {
   return (
     <nav className="border-b border-gray-200 bg-white px-6 h-16 flex items-center justify-between shadow-sm sticky top-0 z-40">
       <div className="flex items-center gap-10">
-        <Link href="/" className="font-black text-xl tracking-tighter uppercase flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs">IS</div>
-          InvSys <span className="text-blue-600 text-[10px] ml-1">PRO</span>
-        </Link>
+      <Link href="/" className="font-black text-xl tracking-tighter uppercase flex items-center gap-2">
+      <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs">IS</div>
+      InvSys <span className="text-blue-600 text-[10px] ml-1">PRO</span>
+      </Link>
         
         <div className="flex gap-6">
           {/* Only show links once loading is done */}
