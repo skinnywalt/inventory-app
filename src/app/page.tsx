@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 
-export default function LandingPage() {
+export default function CommandCenter() {
   const [organizations, setOrganizations] = useState<any[]>([])
   const [selectedOrg, setSelectedOrg] = useState<string>('')
   const [role, setRole] = useState<string | null>(null)
@@ -12,109 +12,103 @@ export default function LandingPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    const loadHomeData = async () => {
+    const loadData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
       setRole(profile?.role || 'seller')
-
       const { data: orgs } = await supabase.from('organizations').select('*').order('name')
       setOrganizations(orgs || [])
-
       const saved = localStorage.getItem('selected_org_id')
-      if (saved) {
-        setSelectedOrg(saved)
-      } else if (orgs && orgs.length > 0) {
+      if (saved) setSelectedOrg(saved)
+      else if (orgs?.length) {
         setSelectedOrg(orgs[0].id)
         localStorage.setItem('selected_org_id', orgs[0].id)
       }
       setIsSyncing(false)
     }
-    loadHomeData()
+    loadData()
   }, [])
 
   const handleOrgChange = (id: string) => {
     setSelectedOrg(id)
     localStorage.setItem('selected_org_id', id)
-    window.dispatchEvent(new Event("storage"))
     window.dispatchEvent(new CustomEvent('orgChanged', { detail: id }))
   }
 
-  const modules = [
-    { name: 'Analytics', desc: 'Real-time revenue & metrics', href: '/dashboard', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
-    { name: 'Inventory', desc: 'Stock control & bulk management', href: '/inventory', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-    { name: 'Shipments', desc: 'POS Terminal & invoicing', href: '/sales', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { name: 'Customers', desc: 'Client directory & history', href: '/clients', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
-  ]
-
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827] px-6 py-12 lg:py-20">
-      <div className="max-w-[1100px] mx-auto">
+    <div className="min-h-screen bg-[#F9FAFB] p-4 md:p-8 font-sans text-[#111827]">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-12 gap-6">
         
-        {/* Header Composition */}
-        <header className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-semibold tracking-tight text-[#111827]">Command Center</h1>
-            <p className="text-[#6B7280] text-sm font-medium">Monitoring multi-tenant infrastructure</p>
-          </div>
-
-          {/* Tenant Selector Card */}
-          <div className="w-full md:w-72 bg-white border border-[#E5E7EB] rounded-xl p-1.5 shadow-sm">
-            <div className="px-3 pt-2 pb-1">
-              <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">Active Organization</span>
+        {/* Left Column: Welcome & Tenant Selector */}
+        <div className="col-span-12 lg:col-span-8 space-y-6">
+          <div className="bg-white rounded-[24px] p-8 border border-[#E5E7EB] shadow-sm">
+            <h1 className="text-4xl font-bold tracking-tight mb-2">Command Center</h1>
+            <p className="text-[#6B7280] font-medium">Welcome back, Administrator</p>
+            
+            <div className="mt-8 pt-8 border-t border-[#F3F4F6]">
+              <label className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-widest block mb-3">Active Organization</label>
+              <select 
+                value={selectedOrg}
+                onChange={(e) => handleOrgChange(e.target.value)}
+                className="w-full md:w-80 bg-[#F3F4F6] border-none rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-[#3B82F6] outline-none cursor-pointer appearance-none"
+              >
+                {organizations.map(org => <option key={org.id} value={org.id}>{org.name}</option>)}
+              </select>
             </div>
-            <select 
-              value={selectedOrg}
-              onChange={(e) => handleOrgChange(e.target.value)}
-              className="w-full bg-transparent px-3 py-2 text-sm font-semibold focus:outline-none cursor-pointer"
-            >
-              {organizations.map(org => (
-                <option key={org.id} value={org.id}>{org.name}</option>
-              ))}
-            </select>
           </div>
-        </header>
 
-        {/* Module Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {isSyncing ? (
-            // Skeleton Loader State
-            [...Array(4)].map((_, i) => (
-              <div key={i} className="h-44 bg-white border border-[#E5E7EB] rounded-xl animate-pulse" />
-            ))
-          ) : (
-            modules.map((m) => (
-              <Link key={m.href} href={m.href} className="group">
-                <div className="h-44 p-6 bg-white border border-[#E5E7EB] rounded-xl shadow-sm hover:border-[#3B82F6] hover:shadow-md transition-all duration-200 flex flex-col justify-between">
-                  <div className="space-y-4">
-                    <svg className="w-6 h-6 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={m.icon} />
-                    </svg>
-                    <div>
-                      <h3 className="text-sm font-semibold text-[#111827]">{m.name}</h3>
-                      <p className="text-xs text-[#6B7280] mt-1 leading-relaxed">{m.desc}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center text-[10px] font-bold uppercase text-[#3B82F6] tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
-                    Open Module 
-                    <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                  </div>
-                </div>
-              </Link>
-            ))
-          )}
+          {/* Module Grid (Bento Style) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ModuleCard title="Analytics" desc="Monitor performance & revenue" href="/dashboard" icon="📈" stats="$24.5k total" />
+            <ModuleCard title="Inventory" desc="Manage 3,000+ SKU items" href="/inventory" icon="📦" stats="12 low stock" />
+            <ModuleCard title="Shipments" desc="Terminal & Invoicing" href="/sales" icon="💳" stats="Ready" />
+            <ModuleCard title="Customers" desc="CRM & Directory" href="/clients" icon="👥" stats="Active" />
+          </div>
         </div>
 
-        {/* Footer Settings */}
-        <footer className="mt-12 pt-8 border-t border-[#E5E7EB] flex justify-between items-center">
-          <p className="text-[11px] font-medium text-[#6B7280]">v1.0.4 Production Build</p>
-          <Link href="/settings" className="flex items-center gap-2 text-[11px] font-bold text-[#6B7280] hover:text-[#3B82F6] transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            System Settings
-          </Link>
-        </footer>
+        {/* Right Column: Mini-Stats / Recent Activity */}
+        <div className="col-span-12 lg:col-span-4 space-y-6">
+          <div className="bg-white rounded-[24px] p-6 border border-[#E5E7EB] shadow-sm h-full">
+            <h3 className="text-lg font-bold mb-6">Popular items</h3>
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between p-2 hover:bg-[#F9FAFB] rounded-xl transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#F3F4F6] rounded-lg flex items-center justify-center text-lg">📦</div>
+                    <div>
+                      <p className="text-sm font-bold">Product Item #{i}</p>
+                      <p className="text-[10px] text-green-600 font-bold uppercase">Active</p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold">$1,200.00</p>
+                </div>
+              ))}
+            </div>
+            <Link href="/inventory" className="block text-center mt-8 py-3 bg-[#F3F4F6] rounded-xl text-xs font-bold hover:bg-[#E5E7EB] transition-colors">
+              All products
+            </Link>
+          </div>
+        </div>
+
       </div>
     </div>
+  )
+}
+
+function ModuleCard({ title, desc, href, icon, stats }: any) {
+  return (
+    <Link href={href} className="group">
+      <div className="bg-white p-6 rounded-[24px] border border-[#E5E7EB] shadow-sm hover:border-[#3B82F6] transition-all flex items-start gap-4 h-32">
+        <div className="w-12 h-12 bg-[#F3F4F6] rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">{icon}</div>
+        <div className="flex-1">
+          <div className="flex justify-between items-start">
+            <h3 className="font-bold text-[#111827]">{title}</h3>
+            <span className="text-[10px] font-bold bg-blue-50 text-[#3B82F6] px-2 py-0.5 rounded-full">{stats}</span>
+          </div>
+          <p className="text-xs text-[#6B7280] mt-1">{desc}</p>
+        </div>
+      </div>
+    </Link>
   )
 }
