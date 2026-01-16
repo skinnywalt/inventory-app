@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false) // Added loading state
+  const [loading, setLoading] = useState(false)
   const supabase = createClient()
   const router = useRouter()
 
@@ -21,57 +21,90 @@ export default function LoginPage() {
       alert(error.message)
       setLoading(false)
     } else {
-      // router.refresh() ensures the server-side components (like the Middleware) 
-      // see the new session cookies immediately.
       router.refresh() 
       router.push('/') 
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <form onSubmit={handleLogin} className="p-10 bg-white rounded-3xl shadow-xl w-full max-w-md border border-gray-100">
-        <div className="mb-8 text-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-blue-200 shadow-lg">
-            <span className="text-white font-black text-lg tracking-tighter">IS</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tighter">Welcome to <span className="text-blue-600">InvSys</span></h1>
-          <p className="text-gray-400 text-sm font-medium mt-2 uppercase tracking-widest">Enterprise Access</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-6 font-sans">
+      <div className="w-full max-w-[400px] space-y-8">
+        
+        {/* Typographic Brand Identity */}
+        <div className="text-center space-y-2">
+          <h2 className="text-[12px] font-black uppercase tracking-[0.3em] text-[#3B82F6]">
+            Infrastructure Access
+          </h2>
+          <h1 className="text-4xl font-bold tracking-tight text-[#111827]">
+            InvSys<span className="text-[#3B82F6]">.</span>
+          </h1>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] ml-2">Email Address</label>
-            <input 
-              required
-              type="email" placeholder="name@company.com" 
-              className="w-full p-4 border border-gray-100 rounded-2xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              onChange={(e) => setEmail(e.target.value)} 
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] ml-2">Password</label>
-            <input 
-              required
-              type="password" placeholder="••••••••" 
-              className="w-full p-4 border border-gray-100 rounded-2xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              onChange={(e) => setPassword(e.target.value)} 
-            />
+        {/* Login Container */}
+        <form 
+          onSubmit={handleLogin} 
+          className="bg-white p-8 rounded-[24px] border border-[#E5E7EB] shadow-sm space-y-6"
+        >
+          <div className="space-y-5">
+            {/* Email Field */}
+            <div className="space-y-2">
+              <label 
+                htmlFor="email" 
+                className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest ml-1"
+              >
+                Corporate Email
+              </label>
+              <input 
+                id="email"
+                required
+                type="email" 
+                placeholder="name@company.com" 
+                className="w-full bg-[#F3F4F6] border-none rounded-xl px-4 py-3 text-sm font-semibold text-[#111827] focus:ring-2 focus:ring-[#3B82F6] transition-all outline-none appearance-none"
+                onChange={(e) => setEmail(e.target.value)} 
+              />
+            </div>
+            
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label 
+                htmlFor="password" 
+                className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest ml-1"
+              >
+                System Password
+              </label>
+              <input 
+                id="password"
+                required
+                type="password" 
+                placeholder="••••••••" 
+                className="w-full bg-[#F3F4F6] border-none rounded-xl px-4 py-3 text-sm font-semibold text-[#111827] focus:ring-2 focus:ring-[#3B82F6] transition-all outline-none appearance-none"
+                onChange={(e) => setPassword(e.target.value)} 
+              />
+            </div>
           </div>
 
           <button 
             disabled={loading}
-            className="w-full bg-blue-600 text-white p-5 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:bg-gray-300 mt-4"
+            className="w-full bg-[#3B82F6] text-white py-4 rounded-xl font-bold text-sm tracking-wide hover:bg-[#2563EB] active:scale-[0.98] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] shadow-sm"
           >
             {loading ? 'AUTHENTICATING...' : 'SIGN IN'}
           </button>
-        </div>
-        
-        <p className="text-center text-[10px] text-gray-300 font-bold uppercase tracking-widest mt-8">
-          Secured by Supabase Auth & RLS
-        </p>
-      </form>
+        </form>
+
+        {/* System Meta */}
+        <footer className="text-center space-y-4">
+          <div className="flex items-center justify-center gap-4">
+            <span className="h-px w-8 bg-[#E5E7EB]"></span>
+            <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-widest">
+              Protocol: RBAC Enabled
+            </p>
+            <span className="h-px w-8 bg-[#E5E7EB]"></span>
+          </div>
+          <p className="text-[10px] text-[#D1D5DB] font-medium leading-relaxed uppercase tracking-tighter">
+            Authorized Personnel Only — Unauthorized Access Monitored
+          </p>
+        </footer>
+      </div>
     </div>
   )
 }
