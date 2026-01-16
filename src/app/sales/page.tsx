@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import Link from 'next/link' // FIX: Ensure Link is imported
 
 export default function SalesPage() {
   const [products, setProducts] = useState<any[]>([])
-  const [clients, setClients] = useState<any[]>([]) // Added state for Clients
+  const [clients, setClients] = useState<any[]>([])
   const [cart, setCart] = useState<any[]>([])
   const [selectedId, setSelectedId] = useState('')
-  const [selectedClientId, setSelectedClientId] = useState('') // Added state for selected Client
+  const [selectedClientId, setSelectedClientId] = useState('')
   const [price, setPrice] = useState<number | ''>('')
   const [qty, setQty] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -20,7 +21,6 @@ export default function SalesPage() {
     const orgId = localStorage.getItem('selected_org_id')
     if (!orgId) return
 
-    // Fetch both Products and Clients simultaneously
     const [prodRes, clientRes] = await Promise.all([
       supabase.from('products').select('*').eq('organization_id', orgId).order('name'),
       supabase.from('clients').select('*').eq('organization_id', orgId).order('full_name')
@@ -40,13 +40,11 @@ export default function SalesPage() {
 
   const addToCart = () => {
     if (!selectedProduct) return
-
     const numericPrice = Number(price)
     if (numericPrice < selectedProduct.min_price) {
       alert(`Price Error: Minimum price is $${selectedProduct.min_price}`)
       return
     }
-
     if (qty <= 0) {
       alert("Please enter a valid quantity")
       return
@@ -82,13 +80,12 @@ export default function SalesPage() {
     setLoading(true)
     const orgId = localStorage.getItem('selected_org_id')
 
-    // 1. Insert Sale Header (Now including client_id)
     const { data: sale, error: saleError } = await supabase
       .from('sales')
       .insert([{ 
         organization_id: orgId, 
         total_amount: total,
-        client_id: selectedClientId // Linked to your new clients table
+        client_id: selectedClientId 
       }])
       .select().single()
 
@@ -98,7 +95,6 @@ export default function SalesPage() {
       return
     }
 
-    // 2. Insert Sale Items
     const saleItems = cart.map(item => ({
       sale_id: sale.id,
       product_id: item.id,
@@ -142,15 +138,31 @@ export default function SalesPage() {
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] bg-gray-50 overflow-hidden font-sans">
+      
       {/* ENTRY SECTION */}
       <div className="flex-1 p-10 bg-white border-r border-gray-200 overflow-y-auto">
+        
+        {/* --- BACK BUTTON PLACEMENT --- */}
+        <div className="mb-6">
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
+          >
+            <span className="group-hover:-translate-x-1 transition-transform">←</span> 
+            Back to Command Center
+          </Link>
+        </div>
+        {/* ---------------------------- */}
+
         <h2 className="text-xl font-bold mb-10 uppercase tracking-widest text-gray-900 border-b pb-4">Shipment Preparation</h2>
         
         <div className="max-w-md space-y-8">
           {/* CLIENT SELECTOR */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Client</label>
+            <label htmlFor="client-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Client</label>
             <select 
+              id="client-select"
+              title="Select Target Client"
               className="w-full p-4 border border-gray-300 rounded-sm text-sm focus:border-black outline-none transition-all"
               value={selectedClientId}
               onChange={(e) => setSelectedClientId(e.target.value)}
@@ -162,8 +174,10 @@ export default function SalesPage() {
 
           {/* PRODUCT SELECTOR */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product</label>
+            <label htmlFor="product-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product</label>
             <select 
+              id="product-select"
+              title="Choose Product to Add"
               className="w-full p-4 border border-gray-300 rounded-sm text-sm focus:border-black outline-none"
               value={selectedId}
               onChange={(e) => {
@@ -179,13 +193,13 @@ export default function SalesPage() {
 
           <div className="flex gap-4">
             <div className="flex-1 space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Unit Price</label>
-              <input type="number" className="w-full p-4 border border-gray-300 rounded-sm text-sm" value={price} onChange={e => setPrice(Number(e.target.value))} />
+              <label htmlFor="price-input" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Unit Price</label>
+              <input id="price-input" type="number" className="w-full p-4 border border-gray-300 rounded-sm text-sm" value={price} onChange={e => setPrice(Number(e.target.value))} />
               {selectedProduct && <p className="text-[9px] font-bold text-gray-400">MIN PRICE: ${selectedProduct.min_price}</p>}
             </div>
             <div className="w-32 space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity</label>
-              <input type="number" className="w-full p-4 border border-gray-300 rounded-sm text-sm" value={qty} onChange={e => setQty(Number(e.target.value))} />
+              <label htmlFor="qty-input" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity</label>
+              <input id="qty-input" type="number" className="w-full p-4 border border-gray-300 rounded-sm text-sm" value={qty} onChange={e => setQty(Number(e.target.value))} />
             </div>
           </div>
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import Link from 'next/link' // Import Link for the back button
 
 export default function CompanyManager() {
   const [organizations, setOrganizations] = useState<any[]>([])
@@ -32,7 +33,6 @@ export default function CompanyManager() {
     } else {
       setNewOrgName('')
       fetchOrgs()
-      // Optional: alert("Company added successfully!")
     }
     setLoading(false)
   }
@@ -47,6 +47,18 @@ export default function CompanyManager() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
+      {/* --- BACK BUTTON PLACEMENT --- */}
+      <div className="mb-6">
+        <Link 
+          href="/" 
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
+        >
+          <span className="group-hover:-translate-x-1 transition-transform">←</span> 
+          Back to Command Center
+        </Link>
+      </div>
+      {/* ---------------------------- */}
+
       <header className="mb-10">
         <h1 className="text-4xl font-black tracking-tight text-gray-900">
           Admin <span className="text-blue-600">Settings</span>

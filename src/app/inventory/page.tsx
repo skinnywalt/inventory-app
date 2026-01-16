@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import BulkUpload from './bulk-upload' 
 import ManualAdd from './manual-add'
+import Link from 'next/link'
 
 export default function InventoryPage() {
   const [products, setProducts] = useState<any[]>([])
@@ -60,6 +61,17 @@ export default function InventoryPage() {
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto bg-white min-h-screen">
+      {/* --- BACK BUTTON PLACEMENT --- */}
+      <div className="mb-6">
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
+          >
+            <span className="group-hover:-translate-x-1 transition-transform">←</span> 
+            Back to Command Center
+          </Link>
+        </div>
+        {/* ---------------------------- */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Inventory Control</h1>

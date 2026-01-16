@@ -40,48 +40,30 @@ export default function Navigation() {
 
   // NAVIGATION CONFIGURATION
   const navLinks = [
-    { name: 'Dashboard', href: '/dashboard', roles: ['admin'] },
-    { name: 'Inventory', href: '/inventory', roles: ['admin', 'supervisor'] },
-    { name: 'Clients', href: '/clients', roles: ['admin', 'supervisor'] },
-    { name: 'Sales Terminal', href: '/sales', roles: ['admin', 'supervisor', 'seller'] },
+    { name: 'Homepage', href: '/', roles: ['admin']},
   ]
 
   return (
-    <nav className="border-b border-gray-200 bg-white px-6 h-16 flex items-center justify-between shadow-sm sticky top-0 z-40">
-      <div className="flex items-center gap-10">
-      <Link href="/" className="font-black text-xl tracking-tighter uppercase flex items-center gap-2">
-      <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs">IS</div>
-      InvSys <span className="text-blue-600 text-[10px] ml-1">PRO</span>
-      </Link>
+    <nav className="border-b border-gray-100 bg-white px-8 h-16 flex items-center justify-between sticky top-0 z-40">
+      <div className="flex items-center gap-8">
+        {/* The Logo: Acts as the "Homepage" button for Admin */}
+        <Link href={role === 'admin' ? '/' : '/sales'} className="font-black text-xl tracking-tighter uppercase flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs">IS</div>
+          InvSys <span className="text-blue-600 text-[10px] ml-1">PRO</span>
+        </Link>
         
-        <div className="flex gap-6">
-          {/* Only show links once loading is done */}
-          {!loading && navLinks.map((link) => {
-            // ADMIN logic: If role is admin, show everything.
-            if (role === 'admin' || (role && link.roles.includes(role))) {
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-[11px] font-bold uppercase tracking-widest transition-all ${
-                    pathname === link.href 
-                      ? 'text-blue-600 border-b-2 border-blue-600' 
-                      : role === 'admin' 
-                        ? 'text-gray-500 hover:text-blue-500' // Admins get a blue hover
-                        : 'text-gray-400 hover:text-black'    // Sellers get a black hover
-                  } pb-1`}
-                >
-                  {link.name}
-                </Link>
-              )
-            }
-            return null
-          })}
-        </div>
+        {/* Only Admin sees the explicit 'Command Center' text link */}
+        {role === 'admin' && (
+          <Link href="/" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
+            Command Center
+          </Link>
+        )}
       </div>
 
       <div className="flex items-center gap-6">
-        <Switchboard />
+        {/* Admin gets the Switchboard, Seller stays locked to their org */}
+        {role === 'admin' && <Switchboard />}
+        
         <button onClick={handleSignOut} className="text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 px-3 py-2 rounded transition-all">
           Sign Out
         </button>
