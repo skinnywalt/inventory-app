@@ -47,7 +47,7 @@ export default function CommandCenter() {
             <p className="text-[#6B7280] font-medium italic">Sesion Activa: Administrados</p>
             
             <div className="mt-8 pt-8 border-t border-[#F3F4F6]">
-              <label className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-widest block mb-3">Cambiar de Organizacion</label>
+              <label className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-widest block mb-3">Organizaciones : </label>
               <select 
                 value={selectedOrg}
                 onChange={(e) => handleOrgChange(e.target.value)}
@@ -78,7 +78,7 @@ export default function CommandCenter() {
               
               <Link href="/settings" className="block w-full">
                 <div className="p-4 bg-[#F3F4F6] rounded-2xl border border-transparent hover:border-[#3B82F6] hover:bg-white transition-all text-center">
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#111827]">Open Global Settings</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#111827]">Ajustes</span>
                 </div>
               </Link>
             </div>
