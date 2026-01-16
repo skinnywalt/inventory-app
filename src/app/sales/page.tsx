@@ -14,7 +14,7 @@ export default function SalesPage() {
   const [selectedClientId, setSelectedClientId] = useState('')
   const [price, setPrice] = useState<number | ''>('')
   const [qty, setQty] = useState(1)
-  const [loading, setLoading] = useState(true) // Start true to prevent "No data" flicker
+  const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
   
   const supabase = createClient()
@@ -22,14 +22,11 @@ export default function SalesPage() {
   const loadData = async () => {
     setLoading(true)
     
-    // 1. Get the authenticated user
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // 2. Identify the Org ID (Priority: LocalStorage > Profile Table)
     let orgId = localStorage.getItem('selected_org_id')
     
-    // Fetch profile to get role and verify organization
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, organization_id')
@@ -38,9 +35,9 @@ export default function SalesPage() {
 
     setUserRole(profile?.role || 'seller')
 
-    // If localStorage is empty (common on first Vercel load), use the profile's org
+    // FIX: Check specifically for profile.organization_id and cast to string
     if (!orgId && profile?.organization_id) {
-      orgId = profile.organization_id
+      orgId = profile.organization_id as string
       localStorage.setItem('selected_org_id', orgId)
     }
 
@@ -49,7 +46,6 @@ export default function SalesPage() {
       return
     }
 
-    // 3. Fetch Products and Clients
     const [prodRes, clientRes] = await Promise.all([
       supabase.from('products').select('*').eq('organization_id', orgId).order('name'),
       supabase.from('clients').select('*').eq('organization_id', orgId).order('full_name')
@@ -63,7 +59,6 @@ export default function SalesPage() {
   useEffect(() => {
     loadData()
     window.addEventListener('storage', loadData)
-    // Listen for our custom event from the Switchboard
     window.addEventListener('orgChanged', loadData) 
 
     return () => {
@@ -72,7 +67,7 @@ export default function SalesPage() {
     }
   }, [])
 
-  // ... (Logic for addToCart, removeFromCart, and total stays the same)
+  // --- Logic Functions ---
   const selectedProduct = products.find(p => p.id === selectedId)
 
   const addToCart = () => {
@@ -174,7 +169,7 @@ export default function SalesPage() {
       {/* ENTRY SECTION */}
       <div className="flex-1 p-10 bg-white border-r border-gray-200 overflow-y-auto">
         
-        {/* Only Admin sees the "Back to Home" because Sellers shouldn't go to Landing Page */}
+        {/* BACK BUTTON: Only for Admin */}
         {userRole === 'admin' && (
           <div className="mb-6">
             <Link 
@@ -190,7 +185,7 @@ export default function SalesPage() {
         <h2 className="text-xl font-bold mb-10 uppercase tracking-widest text-gray-900 border-b pb-4">Shipment Preparation</h2>
         
         <div className="max-w-md space-y-8">
-          {/* CLIENT SELECTOR */}
+          {/* CLIENT SELECTOR - Accessible */}
           <div className="space-y-2">
             <label htmlFor="client-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Client</label>
             <select 
@@ -205,7 +200,7 @@ export default function SalesPage() {
             </select>
           </div>
 
-          {/* PRODUCT SELECTOR */}
+          {/* PRODUCT SELECTOR - Accessible */}
           <div className="space-y-2">
             <label htmlFor="product-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product</label>
             <select 
@@ -228,7 +223,6 @@ export default function SalesPage() {
             <div className="flex-1 space-y-2">
               <label htmlFor="price-input" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Unit Price</label>
               <input id="price-input" type="number" className="w-full p-4 border border-gray-300 rounded-sm text-sm" value={price} onChange={e => setPrice(Number(e.target.value))} />
-              {selectedProduct && <p className="text-[9px] font-bold text-gray-400">MIN PRICE: ${selectedProduct.min_price}</p>}
             </div>
             <div className="w-32 space-y-2">
               <label htmlFor="qty-input" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity</label>

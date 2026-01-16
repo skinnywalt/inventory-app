@@ -17,14 +17,18 @@ export default function Navigation() {
     const fetchUserRole = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: profile } = await supabase
+        // Use .single() to get the specific profile
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single()
-        setRole(profile?.role || 'seller')
+        
+        if (!error && profile) {
+          setRole(profile.role)
+          console.log("Navigation detected role:", profile.role)
+        }
       }
-      setLoading(false)
     }
     fetchUserRole()
   }, [])
