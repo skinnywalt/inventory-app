@@ -7,12 +7,20 @@ export default function Dashboard() {
   const [products, setProducts] = useState<any[]>([])
   const [sales, setSales] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isReady, setIsReady] = useState(false) // New state to track if orgId exists
   const supabase = createClient()
 
   const loadDashboardData = async () => {
     const orgId = localStorage.getItem('selected_org_id')
-    if (!orgId) return
+    
+    if (!orgId) {
+      console.log("Dashboard: Waiting for Organization ID...")
+      setLoading(false) // Stop the "hard" loading screen so nav bar can show
+      setIsReady(false)
+      return 
+    }
 
+    setIsReady(true)
     const [prodRes, saleRes] = await Promise.all([
       supabase.from('products').select('*').eq('organization_id', orgId),
       supabase.from('sales').select('*').eq('organization_id', orgId).order('created_at', { ascending: false })
@@ -36,10 +44,19 @@ export default function Dashboard() {
     return { totalInventoryValue, lowStockCount, totalRevenue }
   }, [products, sales])
 
-  if (loading) return <div className="p-20 text-center font-bold text-gray-400">LOADING ANALYTICS...</div>
+  // 1. Show a light loading state if we are truly fetching
+  if (loading && !isReady) return <div className="p-20 text-center font-bold text-gray-400 animate-pulse uppercase tracking-widest">Initializing Session...</div>
+
+  // 2. Show a "Select Org" state if the Switchboard hasn't picked a company yet
+  if (!isReady) return (
+    <div className="p-20 text-center">
+      <p className="font-bold text-gray-400 uppercase tracking-widest">Please select an organization from the switchboard</p>
+    </div>
+  )
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto bg-white min-h-screen">
+      {/* ... rest of your UI ... */}
       <div className="border-b pb-6 mb-10">
         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Executive Dashboard</h1>
         <p className="text-sm text-gray-500">Real-time performance metrics and inventory health.</p>
@@ -64,7 +81,7 @@ export default function Dashboard() {
         <div className="border border-gray-200 rounded-sm">
           <div className="bg-gray-50 p-4 border-b border-gray-200 font-bold text-sm">Recent Transactions</div>
           <div className="p-4 space-y-3">
-            {sales.slice(0, 5).map(s => (
+            {sales.length === 0 ? <p className="text-xs text-gray-400 italic">No transactions found for this organization.</p> : sales.slice(0, 5).map(s => (
               <div key={s.id} className="flex justify-between text-sm border-b border-gray-50 pb-2">
                 <span className="text-gray-600">ID: {s.id.slice(0,8)}</span>
                 <span className="font-bold text-green-600">+${s.total_amount.toFixed(2)}</span>

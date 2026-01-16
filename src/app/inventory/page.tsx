@@ -12,66 +12,105 @@ export default function InventoryPage() {
   const supabase = createClient()
 
   const loadInventory = async () => {
-    setLoading(true)
+    // 1. Check storage
     const orgId = localStorage.getItem('selected_org_id')
+    
     if (!orgId) {
+      console.log("Inventory: No Org ID found, waiting...")
       setProducts([])
       setLoading(false)
       return
     }
-    const { data } = await supabase.from('products').select('*').eq('organization_id', orgId).order('name')
-    setProducts(data || [])
+
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('organization_id', orgId)
+      .order('name')
+    
+    if (error) {
+      console.error("Inventory Fetch Error:", error.message)
+    } else {
+      setProducts(data || [])
+    }
     setLoading(false)
   }
 
   useEffect(() => {
+    // Initial load
     loadInventory()
+
+    // 2. LISTENERS: Catch updates from Switchboard
     window.addEventListener('storage', loadInventory)
-    return () => window.removeEventListener('storage', loadInventory)
+    window.addEventListener('orgChanged', loadInventory) // Custom event from Switchboard
+
+    return () => {
+      window.removeEventListener('storage', loadInventory)
+      window.removeEventListener('orgChanged', loadInventory)
+    }
   }, [])
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku?.toLowerCase().includes(searchTerm.toLowerCase()))
+    return products.filter(p => 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   }, [products, searchTerm])
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto bg-white min-h-screen">
-      <div className="flex items-center gap-3">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Inventory Control</h1>
-        <ManualAdd onComplete={loadInventory} />
-        <BulkUpload onComplete={loadInventory} />
-        
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Inventory Control</h1>
+          <p className="text-sm text-gray-500 uppercase tracking-widest font-bold mt-1">
+            {loading ? 'Refreshing stock...' : `${products.length} Items Listed`}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <ManualAdd onComplete={loadInventory} />
+          <BulkUpload onComplete={loadInventory} />
+        </div>
       </div>
 
       <div className="mb-6">
         <input 
           type="text" 
-          placeholder="Filter by name or SKU..."
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-black outline-none text-sm shadow-sm"
+          placeholder="Search inventory by name or SKU..."
+          className="w-full max-w-md px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all shadow-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="border border-gray-200 rounded-sm shadow-sm overflow-hidden">
+      <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden bg-white">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            <tr className="text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-              <th className="px-6 py-4">Product</th>
+            <tr className="text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">
+              <th className="px-6 py-4">Product Details</th>
               <th className="px-6 py-4 text-center">SKU</th>
-              <th className="px-6 py-4 text-center">Stock</th>
-              <th className="px-6 py-4 text-right">Unit Min</th>
+              <th className="px-6 py-4 text-center">Stock Level</th>
+              <th className="px-6 py-4 text-right">Unit Price</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200 text-sm">
-            {filteredProducts.map((p) => (
-              <tr key={p.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium">{p.name}</td>
-                <td className="px-6 py-4 text-center font-mono text-gray-500">{p.sku || 'N/A'}</td>
-                <td className={`px-6 py-4 text-center font-bold ${p.quantity < 10 ? 'text-red-600' : ''}`}>{p.quantity}</td>
-                <td className="px-6 py-4 text-right font-bold">${p.min_price.toFixed(2)}</td>
-              </tr>
-            ))}
+          <tbody className="bg-white divide-y divide-gray-100 text-sm">
+            {loading ? (
+              <tr><td colSpan={4} className="py-20 text-center text-gray-400 font-bold italic animate-pulse">Syncing with database...</td></tr>
+            ) : filteredProducts.length === 0 ? (
+              <tr><td colSpan={4} className="py-20 text-center text-gray-400 italic">No inventory found for this organization.</td></tr>
+            ) : (
+              filteredProducts.map((p) => (
+                <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-900">{p.name}</td>
+                  <td className="px-6 py-4 text-center font-mono text-[11px] text-gray-500 bg-gray-50/50">{p.sku || '---'}</td>
+                  <td className={`px-6 py-4 text-center font-black ${p.quantity < 10 ? 'text-red-600' : 'text-gray-900'}`}>
+                    {p.quantity}
+                    {p.quantity < 10 && <span className="ml-2 text-[8px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">LOW</span>}
+                  </td>
+                  <td className="px-6 py-4 text-right font-black text-blue-600">${p.min_price.toFixed(2)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
