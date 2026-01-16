@@ -43,11 +43,11 @@ export default function CommandCenter() {
         {/* Left Column: Welcome & Tenant Selector */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
           <div className="bg-white rounded-[24px] p-8 border border-[#E5E7EB] shadow-sm">
-            <h1 className="text-4xl font-bold tracking-tight mb-2 text-[#111827]">Command Center</h1>
-            <p className="text-[#6B7280] font-medium italic">Active Session: Administrator</p>
+            <h1 className="text-4xl font-bold tracking-tight mb-2 text-[#111827]">Menu Principal</h1>
+            <p className="text-[#6B7280] font-medium italic">Sesion Activa: Administrados</p>
             
             <div className="mt-8 pt-8 border-t border-[#F3F4F6]">
-              <label className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-widest block mb-3">Managed Organization</label>
+              <label className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-widest block mb-3">Cambiar de Organizacion</label>
               <select 
                 value={selectedOrg}
                 onChange={(e) => handleOrgChange(e.target.value)}
@@ -60,10 +60,10 @@ export default function CommandCenter() {
 
           {/* Module Grid (Bento Style) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ModuleCard title="Analytics" desc="Monitor performance & revenue" href="/dashboard" stats="Live" />
-            <ModuleCard title="Inventory" desc="Manage 3,000+ SKU items" href="/inventory" stats="Verified" />
-            <ModuleCard title="Shipments" desc="Terminal & Invoicing" href="/sales" stats="Ready" />
-            <ModuleCard title="Customers" desc="CRM & Directory" href="/clients" stats="Active" />
+            <ModuleCard title="Analyticas" href="/dashboard"/>
+            <ModuleCard title="Inventario" href="/inventory"/>
+            <ModuleCard title="Recibo de Envios" href="/sales"/>
+            <ModuleCard title="Clientes" href="/clients"/>
           </div>
         </div>
 
@@ -71,9 +71,9 @@ export default function CommandCenter() {
         <div className="col-span-12 lg:col-span-4 space-y-6">
           <div className="bg-white rounded-[24px] p-8 border border-[#E5E7EB] shadow-sm h-full flex flex-col justify-between">
             <div>
-              <h3 className="text-lg font-bold mb-6 text-[#111827]">System Configuration</h3>
+              <h3 className="text-lg font-bold mb-6 text-[#111827]">Configuracion de Sistema</h3>
               <p className="text-xs text-[#6B7280] leading-relaxed mb-8">
-                Adjust organizational parameters, manage tenant permissions, and configure global inventory triggers.
+
               </p>
               
               <Link href="/settings" className="block w-full">
@@ -85,7 +85,7 @@ export default function CommandCenter() {
 
             <div className="pt-8 border-t border-[#F3F4F6]">
               <div className="flex justify-between items-center text-[10px] font-black text-[#9CA3AF] uppercase tracking-[0.2em]">
-                <span>Infrastructure</span>
+                <span>Infraestructura</span>
                 <span className="text-[#3B82F6]">v1.0.4 stable</span>
               </div>
             </div>
@@ -107,7 +107,7 @@ function ModuleCard({ title, desc, href, stats }: any) {
         </div>
         <div>
           <p className="text-xs text-[#6B7280] font-medium leading-relaxed">{desc}</p>
-          <p className="text-[10px] font-bold text-[#3B82F6] mt-2 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-tighter">Access Module →</p>
+          <p className="text-[10px] font-bold text-[#3B82F6] mt-2 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-tighter">Modulo de Acceso →</p>
         </div>
       </div>
     </Link>
