@@ -1,96 +1,106 @@
 'use client'
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { useState, useEffect } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import Link from 'next/link'
 
 export default function LandingPage() {
-  const [role, setRole] = useState<string | null>(null);
-  const supabase = createClient();
+  const [organizations, setOrganizations] = useState<any[]>([])
+  const [selectedOrg, setSelectedOrg] = useState<string>('')
+  const [role, setRole] = useState<string | null>(null)
+  const supabase = createClient()
 
   useEffect(() => {
-    const checkRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-        setRole(data?.role || 'seller');
+    const loadHomeData = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // 1. Get Profile/Role
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      setRole(profile?.role || 'seller')
+
+      // 2. Get Orgs
+      const { data: orgs } = await supabase.from('organizations').select('*').order('name')
+      setOrganizations(orgs || [])
+
+      // 3. Set Initial Selection from LocalStorage
+      const saved = localStorage.getItem('selected_org_id')
+      if (saved) {
+        setSelectedOrg(saved)
+      } else if (orgs && orgs.length > 0) {
+        setSelectedOrg(orgs[0].id)
+        localStorage.setItem('selected_org_id', orgs[0].id)
       }
-    };
-    checkRole();
-  }, []);
+    }
+    loadHomeData()
+  }, [])
+
+  const handleOrgChange = (id: string) => {
+    setSelectedOrg(id)
+    localStorage.setItem('selected_org_id', id)
+    // "Shout" to the other components that the tenant changed
+    window.dispatchEvent(new Event("storage"))
+    window.dispatchEvent(new CustomEvent('orgChanged', { detail: id }))
+  }
 
   const adminModules = [
     { name: 'Dashboard', desc: 'Analytics & Revenue', href: '/dashboard', icon: '📈', color: 'bg-blue-50 text-blue-600' },
-    { name: 'Inventory', desc: 'Manage 3,000+ Items', href: '/inventory', icon: '📦', color: 'bg-amber-50 text-amber-600' },
-    { name: 'Sales Terminal', desc: 'Generate Receipts', href: '/sales', icon: '💳', color: 'bg-emerald-50 text-emerald-600' },
-    { name: 'Client Directory', desc: 'CRM & Management', href: '/clients', icon: '👥', color: 'bg-purple-50 text-purple-600' },
-  ];
+    { name: 'Inventory', desc: 'Manage Stock Levels', href: '/inventory', icon: '📦', color: 'bg-amber-50 text-amber-600' },
+    { name: 'Sales Terminal', desc: 'Shipments & Billing', href: '/sales', icon: '💳', color: 'bg-emerald-50 text-emerald-600' },
+    { name: 'Client Directory', desc: 'CRM Management', href: '/clients', icon: '👥', color: 'bg-purple-50 text-purple-600' },
+  ]
 
   return (
     <div className="max-w-[1200px] mx-auto px-6 py-12">
       {/* Header Section */}
-      <div className="mb-16 text-center md:text-left">
-        <div className="inline-flex items-center gap-3 mb-6 bg-blue-50 px-4 py-2 rounded-full">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-          </span>
-          <span className="text-blue-700 text-xs font-black uppercase tracking-widest">System Online</span>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8">
+        <div>
+          <h1 className="text-5xl font-black tracking-tight text-gray-900 mb-2">
+            System <span className="text-blue-600">Command</span>
+          </h1>
+          <p className="text-gray-500 font-medium italic">Welcome back, Administrator Muralles</p>
         </div>
-        
-        <h1 className="text-6xl font-black tracking-tight text-gray-900 mb-4 leading-tight">
-          Control Center <span className="text-blue-600 text-3xl align-top">v1.0</span>
-        </h1>
-        <p className="text-lg text-gray-500 max-w-2xl">
-          Authenticated as <span className="text-gray-900 font-bold uppercase underline decoration-blue-500 decoration-2">{role}</span>. 
-          Manage multi-tenant operations across all integrated organizations.
-        </p>
+
+        {/* --- THE NEW SELECTOR HUB --- */}
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl w-full md:w-80">
+          <label htmlFor="hub-org-select" className="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-3">
+            Active Management Tenant
+          </label>
+          <select 
+            id="hub-org-select"
+            title="Select Organization to Manage"
+            value={selectedOrg}
+            onChange={(e) => handleOrgChange(e.target.value)}
+            className="w-full bg-gray-50 p-3 rounded-xl border-none text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+          >
+            {organizations.map(org => (
+              <option key={org.id} value={org.id}>{org.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Admin Quick-Access Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {adminModules.map((module) => (
           <Link key={module.href} href={module.href} className="group">
-            <div className="h-full p-8 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col items-start text-left">
-              <div className={`w-14 h-14 ${module.color} rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform`}>
+            <div className="h-full p-8 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+              <div className={`w-12 h-12 ${module.color} rounded-2xl flex items-center justify-center text-xl mb-6`}>
                 {module.icon}
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{module.name}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                {module.desc}
-              </p>
-              <span className="mt-auto text-xs font-black uppercase tracking-widest text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                Enter Module →
-              </span>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">{module.name}</h3>
+              <p className="text-xs text-gray-400 font-medium leading-relaxed">{module.desc}</p>
             </div>
           </Link>
         ))}
       </div>
 
-      {/* System Status Footer */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12 border-t border-gray-100">
-        <div className="flex items-center gap-4">
-          <div className="text-2xl">🛡️</div>
-          <div>
-            <h4 className="text-sm font-bold">Secure Access</h4>
-            <p className="text-xs text-gray-400">Row Level Security Active</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-2xl">⚡</div>
-          <div>
-            <h4 className="text-sm font-bold">M2 Optimized</h4>
-            <p className="text-xs text-gray-400">Low-latency data fetching</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-2xl">🏢</div>
-          <div>
-            <h4 className="text-sm font-bold">Global Switchboard</h4>
-            <p className="text-xs text-gray-400">Tenant-isolation enforced</p>
-          </div>
-        </div>
+      {/* Settings Shortcut */}
+      <div className="mt-12 pt-12 border-t border-gray-100 flex justify-center">
+        <Link href="/settings" className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] hover:text-blue-600 transition-colors">
+          ⚙️ Global System Settings
+        </Link>
       </div>
     </div>
-  );
+  )
 }

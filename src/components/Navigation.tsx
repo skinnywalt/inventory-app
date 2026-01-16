@@ -65,8 +65,6 @@ export default function Navigation() {
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Admin gets the Switchboard, Seller stays locked to their org */}
-        {role === 'admin' && <Switchboard />}
         
         <button onClick={handleSignOut} className="text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 px-3 py-2 rounded transition-all">
           Sign Out
