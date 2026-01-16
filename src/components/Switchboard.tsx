@@ -19,26 +19,35 @@ export default function Switchboard() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: profile } = await supabase
+      // CHECKPOINT 1: Profile Fetch
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('role, organization_id')
         .eq('id', user.id)
         .single()
 
+      if (profileErr) console.error("CP1: Profile Error", profileErr)
+      
       const userRole = profile?.role || 'seller'
       setRole(userRole)
+      console.log("CP2: User Role is", userRole)
 
+      // CHECKPOINT 2: Organization Fetch
       let orgData = []
       if (userRole === 'admin') {
-        const { data } = await supabase.from('organizations').select('*').order('name')
+        const { data, error: orgErr } = await supabase.from('organizations').select('*').order('name')
+        if (orgErr) console.error("CP3: Admin Org Fetch Error", orgErr)
         orgData = data || []
       } else {
-        const { data } = await supabase.from('organizations').select('*').eq('id', profile?.organization_id)
+        const { data, error: orgErr } = await supabase.from('organizations').select('*').eq('id', profile?.organization_id)
+        if (orgErr) console.error("CP3: Seller Org Fetch Error", orgErr)
         orgData = data || []
       }
+      
+      console.log("CP4: Organizations found:", orgData.length)
       setOrganizations(orgData)
 
-      // --- LOGIC FIX START ---
+      // CHECKPOINT 3: Selection Logic
       const saved = localStorage.getItem('selected_org_id')
       let finalId = ''
 
@@ -55,12 +64,10 @@ export default function Switchboard() {
       if (finalId) {
         setSelectedOrgId(finalId)
         localStorage.setItem('selected_org_id', finalId)
-        
-        // Trigger both standard and custom events so pages wake up
         window.dispatchEvent(new Event("storage"))
         window.dispatchEvent(new CustomEvent('orgChanged', { detail: finalId }))
+        console.log("CP5: Final Org ID Set to", finalId)
       }
-      // --- LOGIC FIX END ---
     }
     loadSwitchboard()
   }, [])
@@ -69,11 +76,8 @@ export default function Switchboard() {
     if (!id) return
     setSelectedOrgId(id)
     localStorage.setItem('selected_org_id', id)
-    
-    // Shout to other tabs and current tab
     window.dispatchEvent(new Event("storage"))
     window.dispatchEvent(new CustomEvent('orgChanged', { detail: id }))
-    
     router.refresh()
   }
 
@@ -91,11 +95,16 @@ export default function Switchboard() {
         value={selectedOrgId}
         onChange={(e) => handleSwitch(e.target.value)}
         disabled={role !== 'admin' && organizations.length <= 1}
-        className="bg-transparent text-xs font-bold text-gray-900 outline-none cursor-pointer"
+        className="bg-transparent text-xs font-bold text-gray-900 outline-none cursor-pointer min-w-[120px]"
       >
-        {organizations.map(org => (
-          <option key={org.id} value={org.id}>{org.name}</option>
-        ))}
+        {/* If organizations is empty, show a fallback option */}
+        {organizations.length === 0 ? (
+          <option value="">Loading Orgs...</option>
+        ) : (
+          organizations.map(org => (
+            <option key={org.id} value={org.id}>{org.name}</option>
+          ))
+        )}
       </select>
     </div>
   )
