@@ -38,7 +38,7 @@ export default function CompanyManager() {
   }
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? This will affect all linked products.`)) return
+    if (!confirm(`Seguro Que Quieres Eliminar Organizacion "${name}"? This will affect all linked products, esto Afectara a todos los Productos Ligados.`)) return
     
     const { error } = await supabase.from('organizations').delete().eq('id', id)
     if (error) alert(error.message)
@@ -54,25 +54,25 @@ export default function CompanyManager() {
           className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
         >
           <span className="group-hover:-translate-x-1 transition-transform">←</span> 
-          Back to Command Center
+          Menu Principal
         </Link>
       </div>
       {/* ---------------------------- */}
 
       <header className="mb-10">
         <h1 className="text-4xl font-black tracking-tight text-gray-900">
-          Admin <span className="text-blue-600">Settings</span>
+          Ajustes <span className="text-blue-600">De Administrador</span>
         </h1>
-        <p className="text-gray-500 mt-2">Manage organizations and system-wide configurations.</p>
+        <p className="text-gray-500 mt-2">Manejo de Organizaciones.</p>
       </header>
 
       {/* Add Section */}
       <section className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 mb-8">
-        <h2 className="text-xl font-bold mb-6 text-gray-800">Register New Company</h2>
+        <h2 className="text-xl font-bold mb-6 text-gray-800">Registrar Nueva Organizacion</h2>
         <form onSubmit={handleAddCompany} className="flex flex-col md:flex-row gap-4">
           <input 
             type="text" 
-            placeholder="Company Name (e.g., North Logistics)"
+            placeholder="Nombre De La Organizacion (e.g., Mi Panito)"
             className="flex-1 p-4 border border-gray-200 rounded-2xl bg-gray-50 focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
             value={newOrgName}
             onChange={(e) => setNewOrgName(e.target.value)}
@@ -82,7 +82,7 @@ export default function CompanyManager() {
             disabled={loading || !newOrgName}
             className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-blue-700 disabled:bg-gray-300 transition-all shadow-lg active:scale-95"
           >
-            {loading ? 'Creating...' : 'Register Company'}
+            {loading ? 'Creando..' : 'Registrar Organizacion'}
           </button>
         </form>
       </section>
@@ -90,7 +90,7 @@ export default function CompanyManager() {
       {/* List Section */}
       <section className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
         <div className="px-8 py-6 border-b border-gray-100 bg-gray-50/50">
-          <h2 className="text-lg font-bold text-gray-800">Active Organizations</h2>
+          <h2 className="text-lg font-bold text-gray-800">Organizaciones Activas</h2>
         </div>
         <div className="divide-y divide-gray-100">
           {organizations.length > 0 ? (
@@ -112,7 +112,7 @@ export default function CompanyManager() {
             ))
           ) : (
             <div className="p-20 text-center">
-              <p className="text-gray-400 italic">No companies registered yet.</p>
+              <p className="text-gray-400 italic">No Organizaciones Registradas Aun</p>
             </div>
           )}
         </div>

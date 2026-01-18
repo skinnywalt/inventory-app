@@ -12,7 +12,7 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const supabase = createClient()
 
-  // Load inventory based on active organization ID
+  // Business Logic: Load inventory data based on the active session/org
   const loadInventory = async () => {
     const orgId = localStorage.getItem('selected_org_id')
     
@@ -40,7 +40,7 @@ export default function InventoryPage() {
   useEffect(() => {
     loadInventory()
 
-    // Sync with Switchboard events
+    // Sync listeners for tenant switching
     window.addEventListener('storage', loadInventory)
     window.addEventListener('orgChanged', loadInventory)
 
@@ -50,7 +50,7 @@ export default function InventoryPage() {
     }
   }, [])
 
-  // Optimized search filtering
+  // Search logic filtered by name or SKU
   const filteredProducts = useMemo(() => {
     return products.filter(p => 
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -62,7 +62,7 @@ export default function InventoryPage() {
     <div className="min-h-screen bg-[#F9FAFB] p-6 md:p-10 font-sans text-[#111827]">
       <div className="max-w-[1300px] mx-auto space-y-8">
         
-        {/* Navigation & Header Composition */}
+        {/* Navigation & Title Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
             <Link 
@@ -84,8 +84,8 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* Search Bento Card */}
-        <div className="bg-white p-2 rounded-2xl border border-[#E5E7EB] shadow-sm flex items-center max-w-md">
+        {/* Search Bar - Maintained clean rounded edges for input only */}
+        <div className="bg-white p-2 rounded-xl border border-[#E5E7EB] shadow-sm flex items-center max-w-md">
           <div className="pl-4 pr-2 text-[#9CA3AF]">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -100,8 +100,8 @@ export default function InventoryPage() {
           />
         </div>
 
-        {/* Main Inventory Table Card */}
-        <div className="bg-white rounded-[24px] border border-[#E5E7EB] shadow-sm overflow-hidden">
+        {/* Main Table - Refactored to Square (rounded-md for subtle clean edge) */}
+        <div className="bg-white rounded-md border border-[#E5E7EB] shadow-sm overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
@@ -113,7 +113,6 @@ export default function InventoryPage() {
             </thead>
             <tbody className="divide-y divide-[#F3F4F6]">
               {loading ? (
-                // Skeleton UI placeholder
                 [...Array(6)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
                     <td colSpan={4} className="px-8 py-6 h-20 bg-white"></td>
@@ -132,7 +131,7 @@ export default function InventoryPage() {
                       <p className="text-sm font-bold text-[#111827]">{p.name}</p>
                     </td>
                     <td className="px-8 py-6 text-center">
-                      <span className="text-[11px] font-mono font-bold bg-[#F3F4F6] text-[#6B7280] px-3 py-1 rounded-lg">
+                      <span className="text-[11px] font-mono font-bold bg-[#F3F4F6] text-[#6B7280] px-3 py-1 rounded-md">
                         {p.sku || '---'}
                       </span>
                     </td>
@@ -158,7 +157,7 @@ export default function InventoryPage() {
           </table>
         </div>
 
-        {/* System Metadata Footer */}
+        {/* Footer Meta */}
         <div className="flex justify-between items-center pt-4 text-[10px] font-bold text-[#D1D5DB] uppercase tracking-[0.2em]">
           <span>Protocolo NEXO v1.0</span>
           <span>Actualización en tiempo real activa</span>
