@@ -55,13 +55,6 @@ export default function Navigation() {
           <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs">IS</div>
           NEXO <span className="text-blue-600 text-[10px] ml-1"></span>
         </Link>
-        
-        {/* Only Admin sees the explicit 'Command Center' text link */}
-        {role === 'admin' && (
-          <Link href="/" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
-            Command Center
-          </Link>
-        )}
       </div>
 
       <div className="flex items-center gap-6">
