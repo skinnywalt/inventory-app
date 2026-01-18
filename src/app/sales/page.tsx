@@ -277,7 +277,7 @@ export default function SalesPage() {
             disabled={cart.length === 0 || loading}
             className="w-full bg-blue-600 text-white py-6 font-bold text-xs uppercase tracking-[0.2em] rounded-sm hover:bg-blue-700 transition-all shadow-lg"
           >
-            {loading ? 'Processing...' : 'Finalize & Print'}
+            {loading ? 'Processando' : 'Finalizar Envio'}
           </button>
         </div>
       </div>

@@ -40,16 +40,16 @@ export default function ManualAdd({ onComplete }: { onComplete: () => void }) {
       <form onSubmit={handleSubmit} className="bg-white p-8 border border-gray-200 shadow-2xl w-full max-w-md space-y-4">
         <h2 className="text-sm font-bold uppercase tracking-widest border-b pb-4 mb-4">Entrada Manual</h2>
         
-        <input required placeholder="Product Name" className="w-full p-3 border text-sm outline-none focus:border-black" 
+        <input required placeholder="Nombre del Producto" className="w-full p-3 border text-sm outline-none focus:border-black" 
                value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
         
         <input required placeholder="SKU" className="w-full p-3 border text-sm outline-none focus:border-black font-mono" 
                value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} />
         
         <div className="flex gap-4">
-          <input required type="number" placeholder="Qty" className="w-1/2 p-3 border text-sm outline-none focus:border-black" 
+          <input required type="number" placeholder="Cantidad" className="w-1/2 p-3 border text-sm outline-none focus:border-black" 
                  onChange={e => setForm({...form, quantity: parseInt(e.target.value)})} />
-          <input required type="number" step="0.01" placeholder="Price" className="w-1/2 p-3 border text-sm outline-none focus:border-black" 
+          <input required type="number" step="0.01" placeholder="Precio" className="w-1/2 p-3 border text-sm outline-none focus:border-black" 
                  onChange={e => setForm({...form, price: parseFloat(e.target.value)})} />
         </div>
 
