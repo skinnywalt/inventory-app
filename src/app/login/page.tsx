@@ -27,31 +27,31 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-6 font-sans">
-      {/* Container width remains 480px for a solid desktop presence */}
-      <div className="w-full max-w-[480px] space-y-12">
+    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-4 md:p-8 font-sans">
+      {/* Increased max-width to 520px for a more "Enterprise" feel on desktop */}
+      <div className="w-full max-w-[520px] space-y-12">
         
-        {/* Typographic Brand Identity */}
+        {/* Brand Identity */}
         <div className="text-center space-y-4">
           <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#3B82F6] opacity-90">
            Maneja inventario, ventas y clientes
           </h2>
-          <h1 className="text-6xl font-bold tracking-tighter text-[#111827]">
+          <h1 className="text-6xl md:text-7xl font-bold tracking-tighter text-[#111827]">
             NEXO<span className="text-[#3B82F6]">.</span>
           </h1>
         </div>
 
-        {/* Main Login Box */}
+        {/* Form Box - Standardized Padding and Sizing */}
         <form 
           onSubmit={handleLogin} 
-          className="bg-white px-12 py-14 rounded-2xl border border-[#E5E7EB] shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-10"
+          className="bg-white px-8 md:px-14 py-16 rounded-2xl border border-[#E5E7EB] shadow-[0_4px_20px_rgb(0,0,0,0.03)] space-y-10"
         >
           <div className="space-y-8">
-            {/* Email Field */}
+            {/* Email Field - Height Sync */}
             <div className="space-y-3">
               <label 
                 htmlFor="email" 
-                className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.15em] ml-1"
+                className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.2em] ml-1"
               >
                 Correo Electrónico
               </label>
@@ -60,16 +60,16 @@ export default function LoginPage() {
                 required
                 type="email" 
                 placeholder="nombre@correo.com" 
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-5 py-4 text-sm font-medium text-[#111827] focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all outline-none appearance-none placeholder:text-[#9CA3AF]/60"
+                className="w-full h-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-6 text-sm font-medium text-[#111827] focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all outline-none appearance-none placeholder:text-[#9CA3AF]/60"
                 onChange={(e) => setEmail(e.target.value)} 
               />
             </div>
             
-            {/* Password Field */}
+            {/* Password Field - Height Sync */}
             <div className="space-y-3">
               <label 
                 htmlFor="password" 
-                className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.15em] ml-1"
+                className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.2em] ml-1"
               >
                 Contraseña
               </label>
@@ -78,30 +78,31 @@ export default function LoginPage() {
                 required
                 type="password" 
                 placeholder="••••••••" 
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-5 py-4 text-sm font-medium text-[#111827] focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all outline-none appearance-none"
+                className="w-full h-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-6 text-sm font-medium text-[#111827] focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all outline-none appearance-none"
                 onChange={(e) => setPassword(e.target.value)} 
               />
             </div>
           </div>
 
+          {/* High Visibility Accent Button */}
           <button 
             disabled={loading}
-            className="w-full bg-[#111827] text-white py-5 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-[#1F2937] active:scale-[0.98] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] shadow-md shadow-gray-200/50 uppercase"
+            className="w-full h-16 bg-[#3B82F6] text-white rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-[#2563EB] active:scale-[0.98] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] shadow-lg shadow-blue-500/10 uppercase"
           >
             {loading ? 'Validando...' : 'Inicia Sesión'}
           </button>
         </form>
 
-        {/* System Meta */}
-        <footer className="text-center space-y-8">
-          <div className="flex items-center justify-center gap-8">
-            <span className="h-px w-16 bg-[#E5E7EB]"></span>
-            <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-[0.3em]">
+        {/* Footer Meta */}
+        <footer className="text-center space-y-10">
+          <div className="flex items-center justify-center gap-10">
+            <span className="h-px w-20 bg-[#E5E7EB]"></span>
+            <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-[0.4em]">
               Protocolo: RBAC
             </p>
-            <span className="h-px w-16 bg-[#E5E7EB]"></span>
+            <span className="h-px w-20 bg-[#E5E7EB]"></span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 opacity-60">
             <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-widest">
               Solo Personal Autorizado
             </p>

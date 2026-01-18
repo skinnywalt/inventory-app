@@ -147,20 +147,20 @@ export default function SalesPage() {
     const clientName = clients.find(c => c.id === clientId)?.full_name || "Guest"
     const doc = new jsPDF()
     doc.setFont("helvetica", "bold")
-    doc.text("COMMERCIAL SHIPMENT RECEIPT", 105, 20, { align: "center" })
+    doc.text("Recibo De Envio", 105, 20, { align: "center" })
     doc.setFontSize(10).setFont("helvetica", "normal")
-    doc.text(`Client: ${clientName}`, 14, 30)
-    doc.text(`Date: ${new Date().toLocaleString()}`, 14, 35)
+    doc.text(`Cliente: ${clientName}`, 14, 30)
+    doc.text(`Fecha: ${new Date().toLocaleString()}`, 14, 35)
 
     autoTable(doc, {
       startY: 45,
-      head: [['Item', 'Qty', 'Unit Price', 'Subtotal']],
+      head: [['Producto', 'Cantidad', 'Precio Por Unidad', 'Subtotal']],
       body: items.map(i => [i.name, i.saleQty, `$${i.salePrice.toFixed(2)}`, `$${(i.salePrice * i.saleQty).toFixed(2)}`]),
-      foot: [['', '', 'TOTAL AMOUNT', `$${grandTotal.toFixed(2)}`]],
+      foot: [['', '', 'TOTAL', `$${grandTotal.toFixed(2)}`]],
       headStyles: { fillColor: [0, 0, 0] },
       theme: 'grid'
     })
-    doc.save(`Invoice_${Date.now()}.pdf`)
+    doc.save(`Recibo_${Date.now()}.pdf`)
   }
 
   return (
@@ -177,17 +177,17 @@ export default function SalesPage() {
               className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
             >
               <span className="group-hover:-translate-x-1 transition-transform">←</span> 
-              Back to Command Center
+              Menu Principal
             </Link>
           </div>
         )}
 
-        <h2 className="text-xl font-bold mb-10 uppercase tracking-widest text-gray-900 border-b pb-4">Shipment Preparation</h2>
+        <h2 className="text-xl font-bold mb-10 uppercase tracking-widest text-gray-900 border-b pb-4">Preparacion De Envio</h2>
         
         <div className="max-w-md space-y-8">
           {/* CLIENT SELECTOR - Accessible */}
           <div className="space-y-2">
-            <label htmlFor="client-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Client</label>
+            <label htmlFor="client-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Seleccionar Cliente</label>
             <select 
               id="client-select"
               title="Select Target Client"
@@ -195,14 +195,14 @@ export default function SalesPage() {
               value={selectedClientId}
               onChange={(e) => setSelectedClientId(e.target.value)}
             >
-              <option value="">-- Choose Target Client --</option>
+              <option value="">-- Escoge Un Cliente --</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
             </select>
           </div>
 
           {/* PRODUCT SELECTOR - Accessible */}
           <div className="space-y-2">
-            <label htmlFor="product-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product</label>
+            <label htmlFor="product-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Producto</label>
             <select 
               id="product-select"
               title="Choose Product to Add"
@@ -214,18 +214,18 @@ export default function SalesPage() {
                 if (p) setPrice(p.min_price)
               }}
             >
-              <option value="">-- Choose Product --</option>
+              <option value="">-- Escoge Un Producto --</option>
               {products.map(p => <option key={p.id} value={p.id}>{p.name} (In stock: {p.quantity})</option>)}
             </select>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-1 space-y-2">
-              <label htmlFor="price-input" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Unit Price</label>
+              <label htmlFor="price-input" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Precio Por Unidad</label>
               <input id="price-input" type="number" className="w-full p-4 border border-gray-300 rounded-sm text-sm" value={price} onChange={e => setPrice(Number(e.target.value))} />
             </div>
             <div className="w-32 space-y-2">
-              <label htmlFor="qty-input" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity</label>
+              <label htmlFor="qty-input" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cantidad</label>
               <input id="qty-input" type="number" className="w-full p-4 border border-gray-300 rounded-sm text-sm" value={qty} onChange={e => setQty(Number(e.target.value))} />
             </div>
           </div>
@@ -235,20 +235,20 @@ export default function SalesPage() {
             disabled={!selectedId}
             className="w-full bg-black text-white py-5 font-bold text-[10px] uppercase tracking-[0.3em] rounded-sm hover:bg-gray-800 transition-all shadow-sm"
           >
-            Add to Shipment
+            Añadir Al Envio
           </button>
         </div>
       </div>
 
       {/* CART SECTION */}
       <div className="w-full lg:w-[480px] bg-gray-50 p-10 flex flex-col border-t lg:border-t-0 lg:border-l border-gray-200">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8 border-b border-gray-300 pb-2">Active Shipment Items</h2>
+        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8 border-b border-gray-300 pb-2">Productos en el Envio</h2>
         
         <div className="flex-1 overflow-y-auto space-y-3">
           {loading ? (
-             <p className="text-gray-400 text-sm animate-pulse text-center py-20 uppercase font-black">Syncing Systems...</p>
+             <p className="text-gray-400 text-sm animate-pulse text-center py-20 uppercase font-black">Sincronizando Systema...</p>
           ) : cart.length === 0 ? (
-            <p className="text-gray-400 text-sm italic text-center py-20">No items added to current loadout</p>
+            <p className="text-gray-400 text-sm italic text-center py-20">Envio Vacio, Porfavor Añade Un Producto</p>
           ) : (
             cart.map(item => (
               <div key={item.rowId} className="bg-white border border-gray-200 p-5 rounded-sm flex justify-between items-center shadow-sm">
@@ -269,7 +269,7 @@ export default function SalesPage() {
 
         <div className="mt-8 pt-8 border-t-2 border-black">
           <div className="flex justify-between text-3xl font-black mb-10 tracking-tighter text-gray-900">
-            <span className="text-gray-400 uppercase text-xs self-center tracking-widest">Total Invoice</span>
+            <span className="text-gray-400 uppercase text-xs self-center tracking-widest">Total </span>
             <span>${total.toFixed(2)}</span>
           </div>
           <button 

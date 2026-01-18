@@ -68,13 +68,13 @@ export default function InventoryPage() {
             className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span> 
-            Back to Command Center
+            Menu Principal
           </Link>
         </div>
         {/* ---------------------------- */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Inventory Control</h1>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Control de Inventario</h1>
           <p className="text-sm text-gray-500 uppercase tracking-widest font-bold mt-1">
             {loading ? 'Refreshing stock...' : `${products.length} Items Listed`}
           </p>
@@ -99,17 +99,17 @@ export default function InventoryPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr className="text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">
-              <th className="px-6 py-4">Product Details</th>
+              <th className="px-6 py-4">Detalles Del Producto</th>
               <th className="px-6 py-4 text-center">SKU</th>
-              <th className="px-6 py-4 text-center">Stock Level</th>
-              <th className="px-6 py-4 text-right">Unit Price</th>
+              <th className="px-6 py-4 text-center">Cantidad En Stock</th>
+              <th className="px-6 py-4 text-right">Precio por Unidad</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100 text-sm">
             {loading ? (
-              <tr><td colSpan={4} className="py-20 text-center text-gray-400 font-bold italic animate-pulse">Syncing with database...</td></tr>
+              <tr><td colSpan={4} className="py-20 text-center text-gray-400 font-bold italic animate-pulse">Conectando con Base De Datos</td></tr>
             ) : filteredProducts.length === 0 ? (
-              <tr><td colSpan={4} className="py-20 text-center text-gray-400 italic">No inventory found for this organization.</td></tr>
+              <tr><td colSpan={4} className="py-20 text-center text-gray-400 italic">No Inventario para esta Organizacion</td></tr>
             ) : (
               filteredProducts.map((p) => (
                 <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
@@ -117,7 +117,7 @@ export default function InventoryPage() {
                   <td className="px-6 py-4 text-center font-mono text-[11px] text-gray-500 bg-gray-50/50">{p.sku || '---'}</td>
                   <td className={`px-6 py-4 text-center font-black ${p.quantity < 10 ? 'text-red-600' : 'text-gray-900'}`}>
                     {p.quantity}
-                    {p.quantity < 10 && <span className="ml-2 text-[8px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">LOW</span>}
+                    {p.quantity < 10 && <span className="ml-2 text-[8px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Bajo</span>}
                   </td>
                   <td className="px-6 py-4 text-right font-black text-blue-600">${p.min_price.toFixed(2)}</td>
                 </tr>
