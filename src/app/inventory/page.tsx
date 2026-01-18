@@ -12,12 +12,11 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const supabase = createClient()
 
+  // Load inventory based on active organization ID
   const loadInventory = async () => {
-    // 1. Check storage
     const orgId = localStorage.getItem('selected_org_id')
     
     if (!orgId) {
-      console.log("Inventory: No Org ID found, waiting...")
       setProducts([])
       setLoading(false)
       return
@@ -39,12 +38,11 @@ export default function InventoryPage() {
   }
 
   useEffect(() => {
-    // Initial load
     loadInventory()
 
-    // 2. LISTENERS: Catch updates from Switchboard
+    // Sync with Switchboard events
     window.addEventListener('storage', loadInventory)
-    window.addEventListener('orgChanged', loadInventory) // Custom event from Switchboard
+    window.addEventListener('orgChanged', loadInventory)
 
     return () => {
       window.removeEventListener('storage', loadInventory)
@@ -52,6 +50,7 @@ export default function InventoryPage() {
     }
   }, [])
 
+  // Optimized search filtering
   const filteredProducts = useMemo(() => {
     return products.filter(p => 
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -60,71 +59,110 @@ export default function InventoryPage() {
   }, [products, searchTerm])
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto bg-white min-h-screen">
-      {/* --- BACK BUTTON PLACEMENT --- */}
-      <div className="mb-6">
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span> 
-            Menu Principal
-          </Link>
+    <div className="min-h-screen bg-[#F9FAFB] p-6 md:p-10 font-sans text-[#111827]">
+      <div className="max-w-[1300px] mx-auto space-y-8">
+        
+        {/* Navigation & Header Composition */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-1">
+            <Link 
+              href="/" 
+              className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#9CA3AF] hover:text-[#3B82F6] transition-all group mb-2"
+            >
+              <span className="group-hover:-translate-x-1 transition-transform">←</span> 
+              Menu Principal
+            </Link>
+            <h1 className="text-4xl font-bold tracking-tight text-[#111827]">Control de Inventario</h1>
+            <p className="text-[#6B7280] text-sm font-medium">
+              {loading ? 'Sincronizando...' : `${products.length} productos registrados`}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <ManualAdd onComplete={loadInventory} />
+            <BulkUpload onComplete={loadInventory} />
+          </div>
         </div>
-        {/* ---------------------------- */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Control de Inventario</h1>
-          <p className="text-sm text-gray-500 uppercase tracking-widest font-bold mt-1">
-            {loading ? 'Refreshing stock...' : `${products.length} Items Listed`}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <ManualAdd onComplete={loadInventory} />
-          <BulkUpload onComplete={loadInventory} />
-        </div>
-      </div>
 
-      <div className="mb-6">
-        <input 
-          type="text" 
-          placeholder="Search inventory by name or SKU..."
-          className="w-full max-w-md px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all shadow-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+        {/* Search Bento Card */}
+        <div className="bg-white p-2 rounded-2xl border border-[#E5E7EB] shadow-sm flex items-center max-w-md">
+          <div className="pl-4 pr-2 text-[#9CA3AF]">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input 
+            type="text"
+            placeholder="Buscar por nombre o SKU..."
+            className="w-full p-3 bg-transparent text-sm font-medium outline-none placeholder:text-[#9CA3AF]"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-      <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden bg-white">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">
-              <th className="px-6 py-4">Detalles Del Producto</th>
-              <th className="px-6 py-4 text-center">SKU</th>
-              <th className="px-6 py-4 text-center">Cantidad En Stock</th>
-              <th className="px-6 py-4 text-right">Precio por Unidad</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-100 text-sm">
-            {loading ? (
-              <tr><td colSpan={4} className="py-20 text-center text-gray-400 font-bold italic animate-pulse">Conectando con Base De Datos</td></tr>
-            ) : filteredProducts.length === 0 ? (
-              <tr><td colSpan={4} className="py-20 text-center text-gray-400 italic">No Inventario para esta Organizacion</td></tr>
-            ) : (
-              filteredProducts.map((p) => (
-                <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="px-6 py-4 font-bold text-gray-900">{p.name}</td>
-                  <td className="px-6 py-4 text-center font-mono text-[11px] text-gray-500 bg-gray-50/50">{p.sku || '---'}</td>
-                  <td className={`px-6 py-4 text-center font-black ${p.quantity < 10 ? 'text-red-600' : 'text-gray-900'}`}>
-                    {p.quantity}
-                    {p.quantity < 10 && <span className="ml-2 text-[8px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Bajo</span>}
+        {/* Main Inventory Table Card */}
+        <div className="bg-white rounded-[24px] border border-[#E5E7EB] shadow-sm overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
+                <th className="px-8 py-5 text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">Detalles Del Producto</th>
+                <th className="px-8 py-5 text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest text-center">SKU</th>
+                <th className="px-8 py-5 text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest text-center">Cantidad En Stock</th>
+                <th className="px-8 py-5 text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest text-right">Precio por Unidad</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F3F4F6]">
+              {loading ? (
+                // Skeleton UI placeholder
+                [...Array(6)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={4} className="px-8 py-6 h-20 bg-white"></td>
+                  </tr>
+                ))
+              ) : filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-8 py-24 text-center text-[#9CA3AF] text-sm italic font-medium">
+                    No se encontró inventario para esta organización.
                   </td>
-                  <td className="px-6 py-4 text-right font-black text-blue-600">${p.min_price.toFixed(2)}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredProducts.map((p) => (
+                  <tr key={p.id} className="group hover:bg-[#F9FAFB] transition-colors">
+                    <td className="px-8 py-6">
+                      <p className="text-sm font-bold text-[#111827]">{p.name}</p>
+                    </td>
+                    <td className="px-8 py-6 text-center">
+                      <span className="text-[11px] font-mono font-bold bg-[#F3F4F6] text-[#6B7280] px-3 py-1 rounded-lg">
+                        {p.sku || '---'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6 text-center">
+                      <div className="flex flex-col items-center">
+                        <span className={`text-sm font-bold ${p.quantity < 10 ? 'text-[#EF4444]' : 'text-[#111827]'}`}>
+                          {p.quantity}
+                        </span>
+                        {p.quantity < 10 && (
+                          <span className="text-[8px] font-black uppercase text-[#EF4444] mt-1 bg-red-50 px-2 py-0.5 rounded-full">
+                            Bajo Stock
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-right font-bold text-sm text-[#3B82F6]">
+                      ${Number(p.min_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* System Metadata Footer */}
+        <div className="flex justify-between items-center pt-4 text-[10px] font-bold text-[#D1D5DB] uppercase tracking-[0.2em]">
+          <span>Protocolo NEXO v1.0</span>
+          <span>Actualización en tiempo real activa</span>
+        </div>
       </div>
     </div>
   )

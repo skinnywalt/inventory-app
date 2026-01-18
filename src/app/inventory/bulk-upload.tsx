@@ -34,9 +34,9 @@ export default function BulkUpload({ onComplete }: { onComplete: () => void }) {
         // Use the RPC function we just created in SQL
         const { error } = await supabase.rpc('upsert_inventory', { items: formattedData })
 
-        if (error) alert(`Upload failed: ${error.message}`)
+        if (error) alert(`Fallo En Processamiento: ${error.message}`)
         else {
-          alert(`Processed ${formattedData.length} items. Existing SKUs were updated.`)
+          alert(`Procesado ${formattedData.length} Productos. Productos existentes Actualizados.`)
           onComplete()
         }
         setUploading(false)
@@ -47,7 +47,7 @@ export default function BulkUpload({ onComplete }: { onComplete: () => void }) {
 
   return (
     <label className="cursor-pointer bg-black text-white px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-gray-800 transition-all border border-black">
-      {uploading ? 'Processing...' : 'Bulk Import'}
+      {uploading ? 'Processando' : 'Importar Excel'}
       <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} disabled={uploading} />
     </label>
   )

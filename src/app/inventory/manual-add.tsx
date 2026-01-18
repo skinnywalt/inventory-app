@@ -31,14 +31,14 @@ export default function ManualAdd({ onComplete }: { onComplete: () => void }) {
 
   if (!isOpen) return (
     <button onClick={() => setIsOpen(true)} className="border border-black px-5 py-2 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-gray-50 transition-all">
-      + Add Single Item
+      + Añadir Un Producto
     </button>
   )
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <form onSubmit={handleSubmit} className="bg-white p-8 border border-gray-200 shadow-2xl w-full max-w-md space-y-4">
-        <h2 className="text-sm font-bold uppercase tracking-widest border-b pb-4 mb-4">Manual Entry</h2>
+        <h2 className="text-sm font-bold uppercase tracking-widest border-b pb-4 mb-4">Entrada Manual</h2>
         
         <input required placeholder="Product Name" className="w-full p-3 border text-sm outline-none focus:border-black" 
                value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
@@ -54,8 +54,8 @@ export default function ManualAdd({ onComplete }: { onComplete: () => void }) {
         </div>
 
         <div className="flex gap-2 pt-4">
-          <button type="submit" className="flex-1 bg-black text-white py-3 text-[10px] font-bold uppercase tracking-widest">Save Item</button>
-          <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-3 border text-[10px] font-bold uppercase tracking-widest">Cancel</button>
+          <button type="submit" className="flex-1 bg-black text-white py-3 text-[10px] font-bold uppercase tracking-widest">Guardar Producto</button>
+          <button type="button" onClick={() => setIsOpen(false)} className="px-6 py-3 border text-[10px] font-bold uppercase tracking-widest">Cancelar</button>
         </div>
       </form>
     </div>
