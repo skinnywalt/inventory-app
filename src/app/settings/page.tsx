@@ -23,9 +23,7 @@ export default function CompanyManager() {
     e.preventDefault()
     if (!newOrgName) return
     setLoading(true)
-
     const { error } = await supabase.from('organizations').insert([{ name: newOrgName }])
-
     if (error) alert("Error: " + error.message)
     else {
       setNewOrgName('')
@@ -37,7 +35,6 @@ export default function CompanyManager() {
   const handleDelete = async (id: string, name: string) => {
     const warning = `¿Confirmar eliminación de "${name}"?\n\n• Se eliminarán productos y ventas.\n• Usuarios perderán acceso.`;
     if (!confirm(warning)) return
-    
     setLoading(true)
     const { error } = await supabase.from('organizations').delete().eq('id', id)
     if (error) alert(`Error: ${error.message}`)
@@ -47,7 +44,7 @@ export default function CompanyManager() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] p-6 md:p-10 font-sans text-[#111827]">
-      <div className="max-w-[1000px] mx-auto space-y-8">
+      <div className="max-w-[1000px] mx-auto space-y-10">
         
         <div className="space-y-1">
           <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#9CA3AF] hover:text-[#3B82F6] transition-all group mb-2">
@@ -56,28 +53,28 @@ export default function CompanyManager() {
           <h1 className="text-4xl font-bold tracking-tight text-[#111827]">Ajustes de Sistema</h1>
         </div>
 
-        {/* Registrar Box - Changed from blue to Grayish style */}
-        <section className="bg-white p-10 border border-[#E5E7EB] rounded-md shadow-sm">
-          <h2 className="text-[11px] font-black uppercase tracking-widest text-[#3B82F6] mb-6">Nueva Organización</h2>
+        {/* Square Grayish Registrar Box */}
+        <section className="bg-white p-12 border border-[#E5E7EB] rounded-md shadow-sm">
+          <h2 className="text-[11px] font-black uppercase tracking-widest text-[#3B82F6] mb-8">Nueva Organización</h2>
           <form onSubmit={handleAddCompany} className="flex flex-col md:flex-row gap-4">
             <input 
               type="text" 
               placeholder="Nombre de la entidad..."
-              className="flex-1 h-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-5 text-sm font-medium text-[#111827] focus:border-[#3B82F6] outline-none transition-all"
+              className="flex-1 h-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-6 text-sm font-medium text-[#111827] focus:border-[#3B82F6] outline-none transition-all"
               value={newOrgName}
               onChange={(e) => setNewOrgName(e.target.value)}
             />
             <button 
               type="submit"
               disabled={loading || !newOrgName}
-              className="bg-[#111827] text-white px-10 h-14 rounded-lg font-bold text-xs tracking-widest uppercase hover:bg-[#1F2937] disabled:bg-gray-200 transition-all shadow-sm"
+              className="bg-[#111827] text-white px-12 h-14 rounded-lg font-bold text-xs tracking-widest uppercase hover:bg-[#1F2937] transition-all shadow-sm"
             >
               {loading ? 'Procesando...' : 'Registrar'}
             </button>
           </form>
         </section>
 
-        {/* List Section */}
+        {/* Clean Organizations List */}
         <section className="bg-white border border-[#E5E7EB] rounded-md shadow-sm overflow-hidden">
           <div className="px-8 py-5 border-b border-[#E5E7EB] bg-[#F9FAFB]">
             <h2 className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">Organizaciones Activas</h2>
