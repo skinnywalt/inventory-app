@@ -30,7 +30,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-4 md:p-8 font-sans">
       <div className="w-full max-w-[520px] space-y-12">
         
-        {/* Brand Identity - Accent Blue used strictly for branding */}
         <div className="text-center space-y-4">
           <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#3B82F6] opacity-90">
            Maneja inventario, ventas y clientes
@@ -40,18 +39,13 @@ export default function LoginPage() {
           </h1>
         </div>
 
-        {/* Form Box - Standardized for high-end SaaS feel */}
         <form 
           onSubmit={handleLogin} 
-          className="bg-white px-8 md:px-14 py-16 rounded-2xl border border-[#E5E7EB] shadow-[0_4px_20px_rgb(0,0,0,0.03)] space-y-10"
+          className="bg-white px-8 md:px-14 py-16 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-10"
         >
           <div className="space-y-8">
-            {/* Email Field - Standardized H-14 */}
             <div className="space-y-3">
-              <label 
-                htmlFor="email" 
-                className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.2em] ml-1"
-              >
+              <label htmlFor="email" className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.2em] ml-1">
                 Correo Electrónico
               </label>
               <input 
@@ -59,17 +53,13 @@ export default function LoginPage() {
                 required
                 type="email" 
                 placeholder="nombre@correo.com" 
-                className="w-full h-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-6 text-sm font-medium text-[#111827] focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all outline-none appearance-none placeholder:text-[#9CA3AF]/60"
+                className="w-full h-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-6 text-sm font-medium text-[#111827] focus:border-[#3B82F6] transition-all outline-none appearance-none placeholder:text-[#9CA3AF]/60"
                 onChange={(e) => setEmail(e.target.value)} 
               />
             </div>
             
-            {/* Password Field - Standardized H-14 */}
             <div className="space-y-3">
-              <label 
-                htmlFor="password" 
-                className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.2em] ml-1"
-              >
+              <label htmlFor="password" className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.2em] ml-1">
                 Contraseña
               </label>
               <input 
@@ -77,37 +67,25 @@ export default function LoginPage() {
                 required
                 type="password" 
                 placeholder="••••••••" 
-                className="w-full h-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-6 text-sm font-medium text-[#111827] focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all outline-none appearance-none"
+                className="w-full h-14 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-6 text-sm font-medium text-[#111827] focus:border-[#3B82F6] transition-all outline-none appearance-none"
                 onChange={(e) => setPassword(e.target.value)} 
               />
             </div>
           </div>
 
-          {/* Premium Near-Black Button - Best readability for white text */}
           <button 
             disabled={loading}
-            className="w-full h-16 bg-[#111827] text-white rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-[#1F2937] active:scale-[0.98] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] shadow-md shadow-gray-200/50 uppercase"
+            className="w-full h-16 bg-[#111827] text-white rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-[#1F2937] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] uppercase"
           >
             {loading ? 'Validando...' : 'Inicia Sesión'}
           </button>
         </form>
 
-        {/* Footer Meta */}
         <footer className="text-center space-y-10">
           <div className="flex items-center justify-center gap-10">
             <span className="h-px w-20 bg-[#E5E7EB]"></span>
-            <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-[0.4em]">
-              Protocolo: RBAC
-            </p>
+            <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-[0.4em]">Protocolo: RBAC</p>
             <span className="h-px w-20 bg-[#E5E7EB]"></span>
-          </div>
-          <div className="space-y-2 opacity-60">
-            <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-widest">
-              Solo Personal Autorizado
-            </p>
-            <p className="text-[9px] text-[#D1D5DB] font-medium uppercase tracking-tighter">
-              Monitoreo de acceso inautorizado activo
-            </p>
           </div>
         </footer>
       </div>
