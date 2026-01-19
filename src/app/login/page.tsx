@@ -28,10 +28,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] p-4 md:p-8 font-sans">
-      {/* Increased max-width to 520px for a more "Enterprise" feel on desktop */}
       <div className="w-full max-w-[520px] space-y-12">
         
-        {/* Brand Identity */}
+        {/* Brand Identity - Accent Blue used strictly for branding */}
         <div className="text-center space-y-4">
           <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-[#3B82F6] opacity-90">
            Maneja inventario, ventas y clientes
@@ -41,13 +40,13 @@ export default function LoginPage() {
           </h1>
         </div>
 
-        {/* Form Box - Standardized Padding and Sizing */}
+        {/* Form Box - Standardized for high-end SaaS feel */}
         <form 
           onSubmit={handleLogin} 
           className="bg-white px-8 md:px-14 py-16 rounded-2xl border border-[#E5E7EB] shadow-[0_4px_20px_rgb(0,0,0,0.03)] space-y-10"
         >
           <div className="space-y-8">
-            {/* Email Field - Height Sync */}
+            {/* Email Field - Standardized H-14 */}
             <div className="space-y-3">
               <label 
                 htmlFor="email" 
@@ -65,7 +64,7 @@ export default function LoginPage() {
               />
             </div>
             
-            {/* Password Field - Height Sync */}
+            {/* Password Field - Standardized H-14 */}
             <div className="space-y-3">
               <label 
                 htmlFor="password" 
@@ -84,10 +83,10 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* High Visibility Accent Button */}
+          {/* Premium Near-Black Button - Best readability for white text */}
           <button 
             disabled={loading}
-            className="w-full h-16 bg-[#3B82F6] text-white rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-[#2563EB] active:scale-[0.98] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] shadow-lg shadow-blue-500/10 uppercase"
+            className="w-full h-16 bg-[#111827] text-white rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-[#1F2937] active:scale-[0.98] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] shadow-md shadow-gray-200/50 uppercase"
           >
             {loading ? 'Validando...' : 'Inicia Sesión'}
           </button>

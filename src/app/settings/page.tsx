@@ -100,12 +100,6 @@ export default function CompanyManager() {
             {organizations.length > 0 ? (
               organizations.map((org) => (
                 <div key={org.id} className="px-8 py-6 flex justify-between items-center hover:bg-[#F9FAFB] transition-colors group">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-bold text-[#111827]">{org.name}</h3>
-                    <code className="text-[10px] bg-[#F3F4F6] text-[#6B7280] px-2 py-0.5 rounded font-mono">
-                      REF: {org.id.split('-')[0]}...
-                    </code>
-                  </div>
                   <button 
                     onClick={() => handleDelete(org.id, org.name)}
                     className="p-3 text-[#E5E7EB] hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
