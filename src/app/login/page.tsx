@@ -75,7 +75,7 @@ export default function LoginPage() {
           {/* Near-Black button with better hover and contrast */}
           <button 
             disabled={loading}
-            className="w-full h-16 bg-[#111827] text-white rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-[#1F2937] active:scale-[0.98] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] uppercase shadow-md shadow-gray-200/50"
+            className="w-full h-16 bg-[#F9FAFB] text-white rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-[#1F2937] active:scale-[0.98] transition-all disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] uppercase shadow-md shadow-gray-200/50"
           >
             {loading ? 'Validando...' : 'Inicia Sesión'}
           </button>
