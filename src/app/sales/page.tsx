@@ -113,7 +113,7 @@ export default function SalesPage() {
       .insert([{ 
         organization_id: orgId, 
         total_amount: total,
-        client_id: selectedClientId 
+        client_id: selectedClientId,
         user_id: user?.id
       }])
       .select().single()
