@@ -105,6 +105,7 @@ export default function SalesPage() {
   const handleCompleteTransaction = async () => {
     if (cart.length === 0 || !selectedClientId) return
     setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
     const orgId = localStorage.getItem('selected_org_id')
 
     const { data: sale, error: saleError } = await supabase
@@ -113,6 +114,7 @@ export default function SalesPage() {
         organization_id: orgId, 
         total_amount: total,
         client_id: selectedClientId 
+        user_id: user?.id
       }])
       .select().single()
 

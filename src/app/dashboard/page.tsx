@@ -1,107 +1,140 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 
-export default function Dashboard() {
-  const [products, setProducts] = useState<any[]>([])
-  const [sales, setSales] = useState<any[]>([])
+type TabType = 'general' | 'clients' | 'sellers'
+
+export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('general')
+  const [stats, setStats] = useState<any>({ totalRev: 0, salesCount: 0, topClients: [], topSellers: [] })
   const [loading, setLoading] = useState(true)
-  const [isReady, setIsReady] = useState(false) // New state to track if orgId exists
   const supabase = createClient()
 
   const loadDashboardData = async () => {
+    setLoading(true)
     const orgId = localStorage.getItem('selected_org_id')
-    
-    if (!orgId) {
-      console.log("Dashboard: Waiting for Organization ID...")
-      setLoading(false) // Stop the "hard" loading screen so nav bar can show
-      setIsReady(false)
-      return 
+    if (!orgId) return
+
+    // Fetch all sales for this org
+    const { data: salesData } = await supabase
+      .from('sales_leaderboard')
+      .select('*')
+      .eq('organization_id', orgId)
+
+    if (salesData) {
+      // 1. Calculate General Stats
+      const totalRev = salesData.reduce((acc, curr) => acc + curr.total_amount, 0)
+      
+      // 2. Aggregate Clients
+      const clientMap = salesData.reduce((acc: any, curr) => {
+        acc[curr.client_name] = (acc[curr.client_name] || 0) + curr.total_amount
+        return acc
+      }, {})
+      const sortedClients = Object.entries(clientMap)
+        .map(([name, val]) => ({ name, value: val }))
+        .sort((a, b) => b.value - a.value)
+
+      // 3. Aggregate Sellers
+      const sellerMap = salesData.reduce((acc: any, curr) => {
+        const name = curr.user_name || 'Vendedor Desconocido'
+        acc[name] = (acc[name] || 0) + curr.total_amount
+        return acc
+      }, {})
+      const sortedSellers = Object.entries(sellerMap)
+        .map(([name, val]) => ({ name, value: val }))
+        .sort((a, b) => b.value - a.value)
+
+      setStats({
+        totalRev,
+        salesCount: salesData.length,
+        topClients: sortedClients,
+        topSellers: sortedSellers
+      })
     }
-
-    setIsReady(true)
-    const [prodRes, saleRes] = await Promise.all([
-      supabase.from('products').select('*').eq('organization_id', orgId),
-      supabase.from('sales').select('*').eq('organization_id', orgId).order('created_at', { ascending: false })
-    ])
-
-    if (prodRes.data) setProducts(prodRes.data)
-    if (saleRes.data) setSales(saleRes.data)
     setLoading(false)
   }
 
   useEffect(() => {
     loadDashboardData()
-    window.addEventListener('storage', loadDashboardData)
-    return () => window.removeEventListener('storage', loadDashboardData)
   }, [])
 
-  const stats = useMemo(() => {
-    const totalInventoryValue = products.reduce((acc, p) => acc + (p.quantity * p.min_price), 0)
-    const lowStockCount = products.filter(p => p.quantity < 10).length
-    const totalRevenue = sales.reduce((acc, s) => acc + s.total_amount, 0)
-    return { totalInventoryValue, lowStockCount, totalRevenue }
-  }, [products, sales])
+  return (
+    <div className="min-h-screen bg-[#F9FAFB] p-6 md:p-10 font-sans text-[#111827]">
+      <div className="max-w-[1200px] mx-auto space-y-8">
+        
+        {/* Header */}
+        <div className="space-y-1">
+          <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#9CA3AF] hover:text-[#3B82F6] mb-2 transition-all group">
+            <span className="group-hover:-translate-x-1 transition-transform">←</span> Panel Principal
+          </Link>
+          <h1 className="text-4xl font-bold tracking-tight text-[#111827]">Análisis de Rendimiento</h1>
+        </div>
 
-  // 1. Show a light loading state if we are truly fetching
-  if (loading && !isReady) return <div className="p-20 text-center font-bold text-gray-400 animate-pulse uppercase tracking-widest">Iniciando Sesion...</div>
+        {/* Tab Navigation */}
+        <div className="flex gap-1 bg-[#E5E7EB] p-1 rounded-xl w-fit">
+          {(['general', 'clients', 'sellers'] as TabType[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${
+                activeTab === tab ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#111827]'
+              }`}
+            >
+              {tab === 'general' ? 'General' : tab === 'clients' ? 'Clientes' : 'Vendedores'}
+            </button>
+          ))}
+        </div>
 
-  // 2. Show a "Select Org" state if the Switchboard hasn't picked a company yet
-  if (!isReady) return (
-    <div className="p-20 text-center">
-      <p className="font-bold text-gray-400 uppercase tracking-widest">Porfavor seleccionar una organizacion</p>
+        {/* Tab Content */}
+        <div className="bg-white border border-[#E5E7EB] rounded-md shadow-sm min-h-[400px]">
+          {loading ? (
+            <div className="p-20 text-center animate-pulse text-[#9CA3AF] font-bold uppercase text-[10px] tracking-widest">
+              Sincronizando Métricas...
+            </div>
+          ) : (
+            <div className="p-8">
+              {activeTab === 'general' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <StatCard label="Ingresos Totales" value={`$${stats.totalRev.toLocaleString()}`} sub="Acumulado histórico" />
+                  <StatCard label="Transacciones" value={stats.salesCount} sub="Ventas completadas" />
+                </div>
+              )}
+
+              {(activeTab === 'clients' || activeTab === 'sellers') && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-12 px-4 py-2 text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest border-b border-[#F3F4F6]">
+                    <div className="col-span-8">Nombre</div>
+                    <div className="col-span-4 text-right">Volumen de Venta</div>
+                  </div>
+                  {(activeTab === 'clients' ? stats.topClients : stats.topSellers).map((item: any, i: number) => (
+                    <div key={i} className="grid grid-cols-12 px-4 py-4 items-center hover:bg-[#F9FAFB] transition-colors rounded-lg">
+                      <div className="col-span-8 flex items-center gap-4">
+                        <span className="text-xs font-black text-[#3B82F6] bg-blue-50 w-6 h-6 flex items-center justify-center rounded-md">{i + 1}</span>
+                        <span className="text-sm font-bold text-[#111827]">{item.name}</span>
+                      </div>
+                      <div className="col-span-4 text-right text-sm font-bold text-[#111827]">
+                        ${item.value.toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
+}
 
+function StatCard({ label, value, sub }: any) {
   return (
-    <div className="p-6 max-w-[1600px] mx-auto bg-white min-h-screen">
-      {/* ... rest of your UI ... */}
-      {/* --- BACK BUTTON PLACEMENT --- */}
-      <div className="mb-6">
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-blue-600 transition-all group"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span> 
-            Menu Inicial
-          </Link>
-        </div>
-        {/* ---------------------------- */}
-      <div className="border-b pb-6 mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Panel Ejecutivo</h1>
-        <p className="text-sm text-gray-500">Estadisticas Actuales De Los Recibos E Inventarios </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="border border-gray-200 p-6 rounded-sm shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Valor de Inventario</p>
-          <p className="text-3xl font-bold text-gray-900">${stats.totalInventoryValue.toLocaleString()}</p>
-        </div>
-        <div className="border border-gray-200 p-6 rounded-sm shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Ganancias en los Recibos</p>
-          <p className="text-3xl font-bold text-blue-600">${stats.totalRevenue.toLocaleString()}</p>
-        </div>
-        <div className={`border p-6 rounded-sm shadow-sm ${stats.lowStockCount > 0 ? 'border-red-200 bg-red-50' : 'border-gray-200'}`}>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Alertas De Productos Bajos</p>
-          <p className={`text-3xl font-bold ${stats.lowStockCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>{stats.lowStockCount}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="border border-gray-200 rounded-sm">
-          <div className="bg-gray-50 p-4 border-b border-gray-200 font-bold text-sm">Transacciones Recientes</div>
-          <div className="p-4 space-y-3">
-            {sales.length === 0 ? <p className="text-xs text-gray-400 italic">No hay transacciones para esta Organizacion</p> : sales.slice(0, 5).map(s => (
-              <div key={s.id} className="flex justify-between text-sm border-b border-gray-50 pb-2">
-                <span className="text-gray-600">ID: {s.id.slice(0,8)}</span>
-                <span className="font-bold text-green-600">+${s.total_amount.toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="p-8 bg-[#F9FAFB] border border-[#E5E7EB] rounded-2xl">
+      <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-[0.2em] mb-4">{label}</p>
+      <h3 className="text-5xl font-bold tracking-tighter text-[#111827] mb-2">{value}</h3>
+      <p className="text-xs text-[#6B7280] font-medium italic">{sub}</p>
     </div>
   )
 }
