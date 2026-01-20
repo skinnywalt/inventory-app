@@ -39,7 +39,8 @@ export default function DashboardPage() {
       // 1. Aggregate Clients with explicit types
       const clientMap: Record<string, number> = salesData.reduce((acc: Record<string, number>, curr) => {
         const name = curr.client_name || 'Cliente Desconocido'
-        acc[name] = (acc[name] || 0) + (curr.total_amount || 0)
+        const amount = Number(curr.total_amount || 0)
+        acc[name] = (acc[name] || 0) + amount
         return acc
       }, {})
 
@@ -49,8 +50,9 @@ export default function DashboardPage() {
 
       // 2. Aggregate Sellers with explicit types
       const sellerMap: Record<string, number> = salesData.reduce((acc: Record<string, number>, curr) => {
-        const name = curr.user_name || 'Vendedor Desconocido'
-        acc[name] = (acc[name] || 0) + (curr.total_amount || 0)
+        const name = curr.user_name || (curr.user_id ? `ID: ${curr.user_id.split('-')[0]}` : 'Vendedor Desconocido')
+        const amount = Number(curr.total_amount || 0)
+        acc[name] = (acc[name] || 0) + amount
         return acc
       }, {})
 

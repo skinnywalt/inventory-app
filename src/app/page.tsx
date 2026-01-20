@@ -60,7 +60,7 @@ export default function CommandCenter() {
 
           {/* Module Grid (Bento Style) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ModuleCard title="Analyticas" href="/dashboard"/>
+            <ModuleCard title="Analiticas" href="/dashboard"/>
             <ModuleCard title="Inventario" href="/inventory"/>
             <ModuleCard title="Recibo de Envios" href="/sales"/>
             <ModuleCard title="Clientes" href="/clients"/>
