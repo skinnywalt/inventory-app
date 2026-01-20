@@ -16,26 +16,31 @@ export default function SalesPage() {
   const [qty, setQty] = useState(1)
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [orgName, setOrgName] = useState<string>("NEXO") // Added for receipt
   
   const supabase = createClient()
 
   const loadData = async () => {
     setLoading(true)
-    
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
     let orgId = localStorage.getItem('selected_org_id')
     
+    // Fetch profile and organization name in one go
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, organization_id')
+      .select('role, organization_id, organizations(name)')
       .eq('id', user.id)
       .single()
 
     setUserRole(profile?.role || 'seller')
+    
+    // Store the organization name for the receipt
+    if (profile?.organizations) {
+      setOrgName((profile.organizations as any).name)
+    }
 
-    // FIX: Check specifically for profile.organization_id and cast to string
     if (!orgId && profile?.organization_id) {
       orgId = profile.organization_id as string
       localStorage.setItem('selected_org_id', orgId)
@@ -58,16 +63,44 @@ export default function SalesPage() {
 
   useEffect(() => {
     loadData()
-    window.addEventListener('storage', loadData)
-    window.addEventListener('orgChanged', loadData) 
-
-    return () => {
-      window.removeEventListener('storage', loadData)
-      window.removeEventListener('orgChanged', loadData)
-    }
   }, [])
 
-  // --- Logic Functions ---
+  // --- PDF Function Updated with Org Name ---
+  const generateReceiptPDF = (items: any[], grandTotal: number, clientId: string) => {
+    const clientName = clients.find(c => c.id === clientId)?.full_name || "Guest"
+    const doc = new jsPDF()
+    
+    // Header with the Organization Name
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(18)
+    doc.text(orgName, 105, 15, { align: "center" }) // Pulls the real company name
+    
+    doc.setFontSize(12)
+    doc.text("Recibo De Envio", 105, 22, { align: "center" })
+    
+    doc.setFontSize(10).setFont("helvetica", "normal")
+    doc.text(`Cliente: ${clientName}`, 14, 32)
+    doc.text(`Fecha: ${new Date().toLocaleString()}`, 14, 37)
+
+    autoTable(doc, {
+      startY: 45,
+      head: [['Producto', 'Cantidad', 'Precio Por Unidad', 'Subtotal']],
+      body: items.map(i => [
+        i.name, 
+        i.saleQty, 
+        `$${i.salePrice.toFixed(2)}`, 
+        `$${(i.salePrice * i.saleQty).toFixed(2)}`
+      ]),
+      foot: [['', '', 'TOTAL', `$${grandTotal.toFixed(2)}`]],
+      headStyles: { fillColor: [0, 0, 0] },
+      theme: 'grid'
+    })
+    doc.save(`Recibo_${orgName}_${Date.now()}.pdf`)
+  }
+
+  // ... (Rest of your addToCart, removeFromCart, and handleCompleteTransaction functions)
+  // Note: handleCompleteTransaction already calls generateReceiptPDF correctly.
+
   const selectedProduct = products.find(p => p.id === selectedId)
 
   const addToCart = () => {
@@ -145,26 +178,6 @@ export default function SalesPage() {
     setLoading(false)
   }
 
-  const generateReceiptPDF = (items: any[], grandTotal: number, clientId: string) => {
-    const clientName = clients.find(c => c.id === clientId)?.full_name || "Guest"
-    const doc = new jsPDF()
-    doc.setFont("helvetica", "bold")
-    doc.text("Recibo De Envio", 105, 20, { align: "center" })
-    doc.setFontSize(10).setFont("helvetica", "normal")
-    doc.text(`Cliente: ${clientName}`, 14, 30)
-    doc.text(`Fecha: ${new Date().toLocaleString()}`, 14, 35)
-
-    autoTable(doc, {
-      startY: 45,
-      head: [['Producto', 'Cantidad', 'Precio Por Unidad', 'Subtotal']],
-      body: items.map(i => [i.name, i.saleQty, `$${i.salePrice.toFixed(2)}`, `$${(i.salePrice * i.saleQty).toFixed(2)}`]),
-      foot: [['', '', 'TOTAL', `$${grandTotal.toFixed(2)}`]],
-      headStyles: { fillColor: [0, 0, 0] },
-      theme: 'grid'
-    })
-    doc.save(`Recibo_${Date.now()}.pdf`)
-  }
-
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] bg-gray-50 overflow-hidden font-sans">
       
@@ -187,7 +200,6 @@ export default function SalesPage() {
         <h2 className="text-xl font-bold mb-10 uppercase tracking-widest text-gray-900 border-b pb-4">Preparacion De Envio</h2>
         
         <div className="max-w-md space-y-8">
-          {/* CLIENT SELECTOR - Accessible */}
           <div className="space-y-2">
             <label htmlFor="client-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Seleccionar Cliente</label>
             <select 
@@ -202,7 +214,6 @@ export default function SalesPage() {
             </select>
           </div>
 
-          {/* PRODUCT SELECTOR - Accessible */}
           <div className="space-y-2">
             <label htmlFor="product-select" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Producto</label>
             <select 
