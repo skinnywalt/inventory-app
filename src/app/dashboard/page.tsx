@@ -28,41 +28,45 @@ export default function DashboardPage() {
     const orgId = localStorage.getItem('selected_org_id')
     if (!orgId) return
 
-    // 1. Fetch Sales Data (Leaderboard View)
-    const { data: salesData } = await supabase
-      .from('sales_leaderboard')
-      .select('*')
-      .eq('organization_id', orgId)
+    // Fetch Leaderboards
+    const [salesRes, productRes] = await Promise.all([
+      supabase.from('sales_leaderboard').select('*').eq('organization_id', orgId),
+      supabase.from('product_leaderboard').select('*').eq('organization_id', orgId)
+    ])
 
-    // 2. Fetch Product Sales Data (Sale Items joined with Products)
-    // We query this specifically for the products tab
-    const { data: itemsData } = await supabase
-      .from('sale_items')
-      .select('quantity, products(name)')
-      .eq('sales.organization_id', orgId) // Assuming RLS handles this through joins
-
-    if (salesData) {
-      const totalRev = salesData.reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0)
+    if (salesRes.data) {
+      const data = salesRes.data
+      const totalRev = data.reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0)
       
-      const clientMap: Record<string, number> = salesData.reduce((acc: Record<string, number>, curr) => {
+      // Aggregate Clients
+      const clientMap: Record<string, number> = data.reduce((acc: Record<string, number>, curr) => {
         const name = curr.client_name || 'Consumidor Final'
         acc[name] = (acc[name] || 0) + Number(curr.total_amount || 0)
         return acc
       }, {})
 
-      const sellerMap: Record<string, number> = salesData.reduce((acc: Record<string, number>, curr) => {
-        const name = curr.user_name || 'Vendedor Sin Nombre'
+      // Aggregate Sellers (Will now show "Nexo Ventas" correctly)
+      const sellerMap: Record<string, number> = data.reduce((acc: Record<string, number>, curr) => {
+        const name = curr.user_name || 'Vendedor Desconocido'
         acc[name] = (acc[name] || 0) + Number(curr.total_amount || 0)
         return acc
       }, {})
 
-      setStats(prev => ({
-        ...prev,
+      // Map Products from the second query
+      const sortedProducts: LeaderboardEntry[] = (productRes.data || [])
+        .map(item => ({
+          name: item.product_name,
+          value: Number(item.total_units)
+        }))
+        .sort((a, b) => b.value - a.value)
+
+      setStats({
         totalRev,
-        salesCount: salesData.length,
+        salesCount: data.length,
         topClients: Object.entries(clientMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value),
-        topSellers: Object.entries(sellerMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value)
-      }))
+        topSellers: Object.entries(sellerMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value),
+        topProducts: sortedProducts
+      })
     }
     setLoading(false)
   }
@@ -78,15 +82,16 @@ export default function DashboardPage() {
             <span className="group-hover:-translate-x-1 transition-transform">←</span> Menu Principal
           </Link>
           <h1 className="text-4xl font-bold tracking-tight text-[#111827]">Análisis de Rendimiento</h1>
+          <p className="text-[#6B7280] text-sm font-medium italic">Datos consolidados de la organización</p>
         </div>
 
-        {/* Tab Navigation - Added 'Productos' */}
-        <div className="flex gap-1 bg-[#E5E7EB] p-1 rounded-xl w-fit overflow-x-auto max-w-full">
+        {/* Tab Navigation - Grayish Bento Style */}
+        <div className="flex gap-1 bg-[#E5E7EB] p-1 rounded-xl w-fit">
           {(['general', 'clients', 'sellers', 'products'] as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all whitespace-nowrap ${
+              className={`px-6 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${
                 activeTab === tab ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#111827]'
               }`}
             >
@@ -95,25 +100,28 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="bg-white border border-[#E5E7EB] rounded-md shadow-sm min-h-[400px]">
+        <div className="bg-white border border-[#E5E7EB] rounded-md shadow-sm min-h-[450px]">
           {loading ? (
-            <div className="p-20 text-center animate-pulse text-[#9CA3AF] font-bold uppercase text-[10px] tracking-widest">Sincronizando...</div>
+            <div className="p-20 text-center animate-pulse text-[#9CA3AF] font-bold uppercase text-[10px] tracking-widest">
+              Sincronizando Métricas...
+            </div>
           ) : (
             <div className="p-8">
               {activeTab === 'general' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <StatCard label="Ingresos Totales" value={`$${stats.totalRev.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} sub="Balance de Organización" />
-                  <StatCard label="Transacciones" value={stats.salesCount} sub="Ventas globales" />
+                  <StatCard label="Ingresos Totales" value={`$${stats.totalRev.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} sub="Acumulado Histórico" />
+                  <StatCard label="Transacciones" value={stats.salesCount} sub="Ventas Procesadas" />
                 </div>
               )}
 
-              {(activeTab !== 'general') && (
+              {activeTab !== 'general' && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-12 px-4 py-2 text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest border-b border-[#F3F4F6]">
                     <div className="col-span-8">Nombre</div>
-                    <div className="col-span-4 text-right">Volumen</div>
+                    <div className="col-span-4 text-right">
+                      {activeTab === 'products' ? 'Unidades' : 'Volumen'}
+                    </div>
                   </div>
-                  {/* Logic for the current active leaderboard */}
                   {(activeTab === 'clients' ? stats.topClients : activeTab === 'sellers' ? stats.topSellers : stats.topProducts).map((item, i) => (
                     <div key={i} className="grid grid-cols-12 px-4 py-4 items-center hover:bg-[#F9FAFB] transition-colors rounded-lg">
                       <div className="col-span-8 flex items-center gap-4">
@@ -121,10 +129,13 @@ export default function DashboardPage() {
                         <span className="text-sm font-bold text-[#111827]">{item.name}</span>
                       </div>
                       <div className="col-span-4 text-right text-sm font-bold text-[#111827]">
-                        {activeTab === 'products' ? `${item.value} Unidades` : `$${item.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                        {activeTab === 'products' ? `${item.value} Un.` : `$${item.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
                       </div>
                     </div>
                   ))}
+                  {(activeTab === 'products' ? stats.topProducts : activeTab === 'clients' ? stats.topClients : stats.topSellers).length === 0 && (
+                    <div className="p-20 text-center text-[#9CA3AF] text-xs italic font-medium">Sin registros detectados.</div>
+                  )}
                 </div>
               )}
             </div>
