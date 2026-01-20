@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 
-// Define types for our leaderboards
 interface LeaderboardEntry {
   name: string;
   value: number;
@@ -28,15 +27,24 @@ export default function DashboardPage() {
     const orgId = localStorage.getItem('selected_org_id')
     if (!orgId) return
 
-    const { data: salesData } = await supabase
+    const { data: salesData, error } = await supabase
       .from('sales_leaderboard')
       .select('*')
       .eq('organization_id', orgId)
 
+    if (error) {
+      console.error("Error cargando vista:", error.message)
+      setLoading(false)
+      return
+    }
+
     if (salesData) {
-      const totalRev = salesData.reduce((acc, curr) => acc + (curr.total_amount || 0), 0)
+      // DEBUG: Revisa esto en tu consola del navegador
+      console.log("Datos de la vista:", salesData)
+
+      const totalRev = salesData.reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0)
       
-      // 1. Aggregate Clients with explicit types
+      // 1. Aggregate Clients
       const clientMap: Record<string, number> = salesData.reduce((acc: Record<string, number>, curr) => {
         const name = curr.client_name || 'Cliente Desconocido'
         const amount = Number(curr.total_amount || 0)
@@ -44,19 +52,19 @@ export default function DashboardPage() {
         return acc
       }, {})
 
-      const sortedClients: LeaderboardEntry[] = Object.entries(clientMap)
+      const sortedClients = Object.entries(clientMap)
         .map(([name, val]) => ({ name, value: val }))
         .sort((a, b) => b.value - a.value)
 
-      // 2. Aggregate Sellers with explicit types
+      // 2. Aggregate Sellers (FIXED SYNTAX)
       const sellerMap: Record<string, number> = salesData.reduce((acc: Record<string, number>, curr) => {
-        const name = curr.user_name || 'Vendedor Sin Nombre';
-        const amount = Number(curr.total_amount || 0);
-        acc[name] = (acc[name] || 0) + amount;
-        return acc;
+        const name = curr.user_name || 'Vendedor Sin Nombre'
+        const amount = Number(curr.total_amount || 0)
+        acc[name] = (acc[name] || 0) + amount
+        return acc
       }, {})
 
-      const sortedSellers: LeaderboardEntry[] = Object.entries(sellerMap)
+      const sortedSellers = Object.entries(sellerMap)
         .map(([name, val]) => ({ name, value: val }))
         .sort((a, b) => b.value - a.value)
 
@@ -74,12 +82,10 @@ export default function DashboardPage() {
     loadDashboardData()
   }, [])
 
-  // ... (rest of your UI code stays exactly the same)
   return (
     <div className="min-h-screen bg-[#F9FAFB] p-6 md:p-10 font-sans text-[#111827]">
       <div className="max-w-[1200px] mx-auto space-y-8">
         
-        {/* Navigation & Header */}
         <div className="space-y-1">
           <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#9CA3AF] hover:text-[#3B82F6] mb-2 transition-all group">
             <span className="group-hover:-translate-x-1 transition-transform">←</span> Menu Principal
@@ -87,7 +93,6 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-bold tracking-tight text-[#111827]">Análisis de Rendimiento</h1>
         </div>
 
-        {/* Tab Navigation - Grayish Bento Style */}
         <div className="flex gap-1 bg-[#E5E7EB] p-1 rounded-xl w-fit">
           {(['general', 'clients', 'sellers'] as TabType[]).map((tab) => (
             <button
@@ -102,7 +107,6 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Tab Content Box */}
         <div className="bg-white border border-[#E5E7EB] rounded-md shadow-sm min-h-[400px]">
           {loading ? (
             <div className="p-20 text-center animate-pulse text-[#9CA3AF] font-bold uppercase text-[10px] tracking-widest">
