@@ -1,3 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Colors - Use Figma Hex Codes */
+  --color-background: #F8F9FB;
+  --color-foreground: #111827;
+  --color-card: #ffffff;
+  --color-primary: #3B82F6;
+  --color-border: #E5E7EB;
+
+  /* The 32px Radius */
+  --radius-nexo: 2rem;
+  
+  /* The Figma Shadow */
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    @apply antialiased;
+  }
+}
